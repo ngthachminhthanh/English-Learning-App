@@ -36,3 +36,10 @@ export type LearningScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Learning"
 >;
+
+export type CourseDetailScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "CourseDetail" | "Listening" | "Reading"
+>;
+
+export type CourseScreenRouteProp = RouteProp<RootStackParamList, "Course">;
