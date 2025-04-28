@@ -2,7 +2,7 @@ import React from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import RootStack from "./src/Navigation/RootStack";
+import RootStack from "./src/navigation/RootStack";
 export default function App() {
   const Stack = createStackNavigator();
   return (
