@@ -2,6 +2,8 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native";
 import { Course, MyCourse } from "./models"
+import { ImageSourcePropType } from "react-native";
+
 export type RootStackParamList = {
     SplashScreen: undefined;
     Login: undefined;
@@ -26,6 +28,13 @@ export type RootStackParamList = {
     SectionRoot: { sectionID: string };
     Speaking: { sectionID: string };
     Writing: { sectionID: string };
+    QuestionDetails: {
+      user: { avatar: ImageSourcePropType; name: string; date: Date },
+      title: string,
+      question: string,
+      answers: { user: { avatar: ImageSourcePropType; name: string; date: Date }; answer: string }[],
+    }
+    QandA: undefined
   };
 export type HeaderNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -35,6 +44,16 @@ export type HeaderNavigationProp = StackNavigationProp<
 export type LearningScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Learning"
+>;
+
+export type QScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "QuestionDetails"
+>;
+
+export type QandAScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "QandA"
 >;
 
 export type CourseDetailScreenNavigationProp = StackNavigationProp<

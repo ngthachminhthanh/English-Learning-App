@@ -2,8 +2,12 @@ import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/Feather";
+import { useNavigation } from "@react-navigation/native";
+import { QandAScreenNavigationProp } from "../../type";
 
 export default function More() {
+
+  const navigation = useNavigation<QandAScreenNavigationProp>()
   return (
     <View className="p-[16px]">
       <TouchableOpacity style={styles.menuItem}>
@@ -14,7 +18,9 @@ export default function More() {
         <Icon name="share-2" size={20} color="#666" style={styles.menuIcon} />
         <Text style={styles.menuText}>Share this course</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.menuItem}>
+      <TouchableOpacity style={styles.menuItem} 
+        onPress={()=> navigation.navigate("QandA")}
+      >
         <Icon
           name="message-circle"
           size={20}
