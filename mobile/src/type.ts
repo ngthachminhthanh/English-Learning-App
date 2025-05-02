@@ -3,6 +3,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native";
 import { Course, MyCourse } from "./models"
 import { ImageSourcePropType } from "react-native";
+import { VocabItem } from "./screens/Vocabulary/VocabFrame";
 
 export type RootStackParamList = {
     SplashScreen: undefined;
@@ -28,6 +29,7 @@ export type RootStackParamList = {
     SectionRoot: { sectionID: string };
     Speaking: { sectionID: string };
     Writing: { sectionID: string };
+    Vocabulary: { sectionID: string };
     QuestionDetails: {
       user: { avatar: ImageSourcePropType; name: string; date: Date },
       title: string,
@@ -35,6 +37,7 @@ export type RootStackParamList = {
       answers: { user: { avatar: ImageSourcePropType; name: string; date: Date }; answer: string }[],
     }
     QandA: undefined
+    FlashCard: { wordList: VocabItem[]; }
   };
 export type HeaderNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -51,6 +54,11 @@ export type QScreenNavigationProp = StackNavigationProp<
   "QuestionDetails"
 >;
 
+export type FlashCardNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "FlashCard"
+>;
+
 export type QandAScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "QandA"
@@ -58,7 +66,7 @@ export type QandAScreenNavigationProp = StackNavigationProp<
 
 export type CourseDetailScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "CourseDetail" | "Listening" | "Reading"
+  "CourseDetail" | "Listening" | "Reading" | "Vocabulary"
 >;
 
 export type CourseScreenRouteProp = RouteProp<RootStackParamList, "Course">;
