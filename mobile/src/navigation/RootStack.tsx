@@ -3,6 +3,8 @@ import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import Learning from "../screens/Learning";
 import CourseViewer from "../components/CourseHome";
+import Vocabulary from "../screens/Vocabulary";
+import FlashCard from "../screens/FlashCard";
 import { QuestionListScreen } from "../components/Q&A";
 
 
@@ -11,6 +13,15 @@ export default function RootStack() {
     const scrollRef = useRef<ScrollView>(null);
     return (
         <Stack.Navigator initialRouteName="CourseViewer">
+            <Stack.Screen
+                name="Vocabulary"
+                component={Vocabulary}
+            />
+
+            <Stack.Screen
+                name="FlashCard"
+                component={FlashCard}
+            />
             <Stack.Screen
                 name="CourseViewer"
                 component={CourseViewer}
