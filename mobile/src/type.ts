@@ -16,7 +16,7 @@ export type RootStackParamList = {
     Learning: undefined;
     Course: { course: MyCourse };
     Reading: { scrollRef?: React.RefObject<ScrollView>; sectionID: string };
-    Grammar: {id:string};
+    Grammar: {sectionID:string};
     GrammarDetail: { id: string };
     CourseDetail: { course: Course };
     CourseHome: { course: MyCourse };
@@ -59,6 +59,19 @@ export type FlashCardNavigationProp = StackNavigationProp<
   "FlashCard"
 >;
 
+
+export type GrammarScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Grammar"
+>;
+
+export type GrammarScreenRouteProp = RouteProp<RootStackParamList, "Grammar">;
+
+export type GrammarDetailScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "GrammarDetail"
+>;
+
 export type QandAScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "QandA"
@@ -66,7 +79,7 @@ export type QandAScreenNavigationProp = StackNavigationProp<
 
 export type CourseDetailScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "CourseDetail" | "Listening" | "Reading" | "Vocabulary"
+  "CourseDetail" | "Listening" | "Reading" | "Vocabulary" | "Grammar"
 >;
 
 export type CourseScreenRouteProp = RouteProp<RootStackParamList, "Course">;
