@@ -5,6 +5,8 @@ import Learning from "../screens/Learning";
 import CourseViewer from "../components/CourseHome";
 import Vocabulary from "../screens/Vocabulary";
 import FlashCard from "../screens/FlashCard";
+import Grammar from "../screens/Grammar";
+import DetailGrammar from "../screens/Grammar/DetailGrammar";
 import { QuestionListScreen } from "../components/Q&A";
 
 
@@ -13,6 +15,16 @@ export default function RootStack() {
     const scrollRef = useRef<ScrollView>(null);
     return (
         <Stack.Navigator initialRouteName="CourseViewer">
+
+            <Stack.Screen
+                name="Grammar"
+                component={Grammar}
+            />
+
+            <Stack.Screen
+                name="GrammarDetail"
+                component={DetailGrammar}
+            />
             <Stack.Screen
                 name="Vocabulary"
                 component={Vocabulary}

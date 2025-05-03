@@ -231,6 +231,9 @@ export default function CourseViewer() {
       case "vocab":
         navigation.navigate("Vocabulary", { sectionID: section.id });
         break;
+      case "grammar":
+        navigation.navigate("Grammar", { sectionID: section.id });
+        break;
       default:
         break;
     }
