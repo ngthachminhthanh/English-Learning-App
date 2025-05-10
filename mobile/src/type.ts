@@ -2,6 +2,9 @@ import { RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScrollView } from "react-native";
 import { Course, MyCourse } from "./models"
+import { ImageSourcePropType } from "react-native";
+import { VocabItem } from "./screens/Vocabulary/VocabFrame";
+
 export type RootStackParamList = {
     SplashScreen: undefined;
     Login: undefined;
@@ -13,7 +16,7 @@ export type RootStackParamList = {
     Learning: undefined;
     Course: { course: MyCourse };
     Reading: { scrollRef?: React.RefObject<ScrollView>; sectionID: string };
-    Grammar: {id:string};
+    Grammar: {sectionID:string};
     GrammarDetail: { id: string };
     CourseDetail: { course: Course };
     CourseHome: { course: MyCourse };
@@ -26,6 +29,15 @@ export type RootStackParamList = {
     SectionRoot: { sectionID: string };
     Speaking: { sectionID: string };
     Writing: { sectionID: string };
+    Vocabulary: { sectionID: string };
+    QuestionDetails: {
+      user: { avatar: ImageSourcePropType; name: string; date: Date },
+      title: string,
+      question: string,
+      answers: { user: { avatar: ImageSourcePropType; name: string; date: Date }; answer: string }[],
+    }
+    QandA: undefined
+    FlashCard: { wordList: VocabItem[]; }
   };
 export type HeaderNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -37,9 +49,37 @@ export type LearningScreenNavigationProp = StackNavigationProp<
   "Learning"
 >;
 
+export type QScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "QuestionDetails"
+>;
+
+export type FlashCardNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "FlashCard"
+>;
+
+
+export type GrammarScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Grammar"
+>;
+
+export type GrammarScreenRouteProp = RouteProp<RootStackParamList, "Grammar">;
+
+export type GrammarDetailScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "GrammarDetail"
+>;
+
+export type QandAScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "QandA"
+>;
+
 export type CourseDetailScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "CourseDetail" | "Listening" | "Reading"
+  "CourseDetail" | "Listening" | "Reading" | "Vocabulary" | "Grammar"
 >;
 
 export type CourseScreenRouteProp = RouteProp<RootStackParamList, "Course">;
