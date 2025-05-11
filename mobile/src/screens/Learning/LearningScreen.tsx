@@ -5,6 +5,7 @@ import CourseItem from "../../components/CourseItem";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 
 import { LearningScreenNavigationProp } from "../../type"
+import courseService from "../../services/course.service";
 
 import { MyCourse } from "../../models";
 import MainHeader from "../../components/MainHeader";
@@ -15,27 +16,31 @@ export default function LearningScreen() {
   const nav = useNavigation<LearningScreenNavigationProp>();
   const [buttonSelected, setButtonSelected] = React.useState("All");
   const [studentCourses, setStudentCourses] = useState<MyCourse[]>([]);
-//   useFocusEffect(
-//     useCallback(() => {
-//       const fetchStudentCourses = async () => {
-//         try {
-//           const res = await courseService.getStudentCourses();
-//           if (res.statusCode === 200) {
-//             setStudentCourses(res.data);
-//           } else {
-//             console.error(
-//               "Error fetching student courses, status code: ",
-//               res.statusCode
-//             );
-//           }
-//         } catch (error) {
-//           console.error("Error fetching student courses: ", error);
-//         }
-//       };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchStudentCourses = async () => {
+        try {
+          const res = await courseService.getStudentCourses();
+          console.log("res",res);
+          
+          if (res.statusCode === 200) {
+            console.log("ok");
+            
+            setStudentCourses(res.data);
+          } else {
+            console.error(
+              "Error fetching student courses, status code: ",
+              res.statusCode
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching student courses: ", error);
+        }
+      };
 
-//       fetchStudentCourses();
-//     }, [])) // Empty dependenc
-//   console.log(studentCourses.map((course) => course.id));
+      fetchStudentCourses();
+    }, [])) // Empty dependenc
+  console.log(studentCourses.map((course) => course.id));
 
   return (
     <SafeAreaView className="w-full h-full flex-1 ">
