@@ -14,7 +14,7 @@ export default function RootStack() {
     const Stack = createStackNavigator();
     const scrollRef = useRef<ScrollView>(null);
     return (
-        <Stack.Navigator initialRouteName="Learning">
+        <Stack.Navigator initialRouteName="CourseViewer">
 
             <Stack.Screen
                 name="Grammar"

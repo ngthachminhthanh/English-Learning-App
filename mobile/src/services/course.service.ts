@@ -17,7 +17,7 @@ class CourseService {
   async getStudentCourses() {
     console.log("ok");
     
-    return await http.get(this.getURI("course/student/my-course"));
+    return await http.get(this.getURI("student/my-course"));
   }
   async getCourseById(courseId: string) {
     return await http.get(this.getURI(`detail/${courseId}`));
