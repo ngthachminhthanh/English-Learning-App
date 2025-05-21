@@ -3,7 +3,7 @@ import http from "./Http";
 class CourseService {
   baseURI: string;
   constructor() {
-    this.baseURI = "/course/";
+    this.baseURI = "course/";
   }
   private getURI(uri: string) {
     return `${this.baseURI}${uri}`;
@@ -15,8 +15,6 @@ class CourseService {
     return await http.get(this.getURI("get-all-recomendation-courses"));
   }
   async getStudentCourses() {
-    console.log("ok");
-    
     return await http.get(this.getURI("student/my-course"));
   }
   async getCourseById(courseId: string) {

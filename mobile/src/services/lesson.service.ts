@@ -3,7 +3,7 @@ import http from "./Http";
 class LessonService {
   baseURI: string;
   constructor() {
-    this.baseURI = "/lesson/";
+    this.baseURI = "lesson/";
   }
   private getURI(uri: string) {
     return `${this.baseURI}${uri}`;
