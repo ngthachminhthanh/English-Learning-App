@@ -1,4 +1,4 @@
-import { API_URL, ACCESS_TOKEN } from "@env";
+import { API_URL } from "@env";
 import * as SecureStore from "expo-secure-store";
 
 class Http {
@@ -11,14 +11,10 @@ class Http {
   }
 
   private async initializeToken() {
-    // this.accessToken = await SecureStore.getItemAsync("accessToken");
-    this.accessToken = ACCESS_TOKEN
+    this.accessToken = await SecureStore.getItemAsync("accessToken");
   }
 
   private getURL(url: string) {
-    console.log(`${this.baseUrl}${url}`);
-    
-
     return `${this.baseUrl}${url}`;
   }
 
