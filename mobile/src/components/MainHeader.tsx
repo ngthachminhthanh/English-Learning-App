@@ -4,20 +4,23 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import { HeaderNavigationProp } from "../type";
 
 type MainHeaderProps = {
-  showSearchButton?: boolean; // Add a prop to control the visibility of the search button
+  showSearchButton?: boolean;
+  showBellButton?: boolean;
+  onBellPress?: () => void;
 };
 
-export default function MainHeader({ showSearchButton }: MainHeaderProps) {
+export default function MainHeader({
+  showSearchButton,
+  showBellButton = true,
+  onBellPress,
+}: MainHeaderProps) {
   const nav = useNavigation<HeaderNavigationProp>();
   return (
     <View
-      className="bg-white  flex flex-row justify-between items-center px-4 pt-5 pb-4 w-full"
+      className="bg-white flex flex-row justify-between items-center px-4 pt-5 pb-4 w-full"
       style={{
         shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 8,
@@ -36,18 +39,16 @@ export default function MainHeader({ showSearchButton }: MainHeaderProps) {
             <Icon name="search" color="#5D5FEF" size={24} />
           </TouchableOpacity>
         )}
-
-        <TouchableOpacity className="button">
-          <Icon
-            name="notifications-none"
-            type="material"
-            color="#5D5FEF"
-            size={24}
-            onPress={() => {
-              nav.navigate("Notification");
-            }}
-          />
-        </TouchableOpacity>
+        {showBellButton && (
+          <TouchableOpacity className="button" onPress={onBellPress ?? (() => nav.navigate("Notification"))}>
+            <Icon
+              name="notifications-none"
+              type="material"
+              color="#5D5FEF"
+              size={24}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

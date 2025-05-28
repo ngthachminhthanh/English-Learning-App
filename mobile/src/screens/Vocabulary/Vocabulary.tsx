@@ -1,10 +1,11 @@
-import { Text, View, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import VocabFrame, { VocabItem } from "./VocabFrame";
 import MainHeader from "../../components/MainHeader";
 import { useNavigation } from "@react-navigation/native";
 import { FlashCardNavigationProp } from "../../type";
+import { Icon } from "@rneui/themed";
 
 const initialVocab: VocabItem[] = [
   { id: 1, term: "home(n)", translation: "nhà", checked: false, showImage: true },
@@ -13,7 +14,7 @@ const initialVocab: VocabItem[] = [
 ];
 
 const Vocabulary = () => {
-    const navigation = useNavigation<FlashCardNavigationProp>()
+  const navigation = useNavigation<FlashCardNavigationProp>();
   const [vocabList, setVocabList] = useState<VocabItem[]>(initialVocab);
   const [tab, setTab] = useState<"all" | "notLearned">("all");
 
@@ -26,20 +27,22 @@ const Vocabulary = () => {
   const filteredList =
     tab === "all" ? vocabList : vocabList.filter(word => !word.checked);
 
-
-    const handleFlashcard = () => {
-        const notLearned = vocabList.filter(word => !word.checked);
-        navigation.navigate("FlashCard", { wordList: notLearned });
-      };
-//   const handleFlashcard = () => {
-//     const notLearned = vocabList.filter(word => !word.checked);
-//     console.log("Words to study:", notLearned);
-//     Alert.alert("Flashcard List", notLearned.map(w => w.term).join(", "));
-//   };
+  const handleFlashcard = () => {
+    const notLearned = vocabList.filter(word => !word.checked);
+    navigation.navigate("Notification", { wordList: notLearned });
+  };
 
   return (
     <SafeAreaView>
-      <MainHeader />
+      <MainHeader
+        onBellPress={() => handleFlashcard()}
+      />
+      {/* MainHeader with bell button moved to the header area */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 16, marginTop: 16 }}>
+        <Text style={{ fontSize: 22, fontWeight: "bold", color: "#5D5FEF" }}>Vocabulary</Text>
+
+      </View>
+
       <View className="mx-4 my-5">
         <View>
           <Text className="text-black text-sm">{vocabList.length} words</Text>
