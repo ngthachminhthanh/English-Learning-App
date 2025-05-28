@@ -8,6 +8,7 @@ import FlashCard from "../screens/FlashCard";
 import Grammar from "../screens/Grammar";
 import DetailGrammar from "../screens/Grammar/DetailGrammar";
 import { QuestionListScreen } from "../components/Q&A";
+import Notification from "../screens/Notification";
 
 
 export default function RootStack() {
@@ -22,12 +23,18 @@ export default function RootStack() {
             />
 
             <Stack.Screen
+                name="Notification"
+                component={Notification}
+            />
+
+            <Stack.Screen
                 name="GrammarDetail"
                 component={DetailGrammar}
             />
             <Stack.Screen
                 name="Vocabulary"
                 component={Vocabulary}
+                options={{ headerShown: false }}
             />
 
             <Stack.Screen

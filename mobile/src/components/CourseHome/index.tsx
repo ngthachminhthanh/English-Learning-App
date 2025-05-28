@@ -18,7 +18,7 @@ import { CourseDetailScreenNavigationProp, CourseScreenRouteProp } from "../../t
 import More from "./More";
 import { ActivityIndicator } from "react-native-paper";
 import HTML from 'react-native-render-html';  // Import HTML renderer
-
+import { scheduleStudyReminder } from '../../utils/notification.util';
 const { height } = Dimensions.get("window");
 
 export default function CourseViewer() {
@@ -45,6 +45,7 @@ export default function CourseViewer() {
     categoryName: "Toeic Listening",
     thumbnail_image: "https://d1fc7d6en42vzg.cloudfront.net//https://example.com/thumbnail.jpg",
   };
+  
 
   useEffect(() => {
     fetchLessons();
