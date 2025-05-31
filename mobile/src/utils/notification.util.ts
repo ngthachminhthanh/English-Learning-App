@@ -14,13 +14,13 @@ export async function scheduleStudyReminder(title: string, body: string) {
     console.log(`Scheduling notification with title: "${title}" and body: "${body}"`);
     
 
-    const now = new Date();
-    const scheduledTime = new Date();
-    scheduledTime.setHours(17, 29, 0, 0); // 5:20 PM
+    // const now = new Date();
+    // const scheduledTime = new Date();
+    // scheduledTime.setHours(22, 0, 0, 0); // 10:00 PM
 
-    if (scheduledTime < now) {
-        scheduledTime.setDate(scheduledTime.getDate() + 1);
-    }
+    // if (scheduledTime < now) {
+    //     scheduledTime.setDate(scheduledTime.getDate() + 1);
+    // }
 
     await Notifications.scheduleNotificationAsync({
         content: {
@@ -29,8 +29,8 @@ export async function scheduleStudyReminder(title: string, body: string) {
         },
         trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DAILY,
-            hour: scheduledTime.getHours(),
-            minute: scheduledTime.getMinutes(),
+            hour: 20,
+            minute: 0,
         },
     });
 

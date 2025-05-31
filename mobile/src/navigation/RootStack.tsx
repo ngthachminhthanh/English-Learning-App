@@ -12,11 +12,11 @@ import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
 import {
-    AuthCongrats,
-    ForgotPassword,
+    // AuthCongrats,
+    // ForgotPassword,
     Login,
-    OTPVerification,
-    ResetPassword,
+    // OTPVerification,
+    // ResetPassword,
     SignUp,
 } from "../screens/Auth";
 import SplashScreen from "../screens/Splash/SplashScreen";
@@ -36,7 +36,7 @@ export default function RootStack() {
     const Stack = createStackNavigator();
     const scrollRef = useRef<ScrollView>(null);
     return (
-        <Stack.Navigator>
+        <Stack.Navigator initialRouteName="CourseViewer">
             <Stack.Screen
                 name="SplashScreen"
                 component={SplashScreen}
@@ -52,7 +52,7 @@ export default function RootStack() {
                 component={SignUp}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
                 name="ForgotPassword"
                 component={ForgotPassword}
                 options={{ headerShown: false }}
@@ -71,7 +71,7 @@ export default function RootStack() {
                 name="AuthCongrats"
                 component={AuthCongrats}
                 options={{ headerShown: false }}
-            />
+            /> */}
             <Stack.Screen
                 options={{
                     headerShown: false,
@@ -85,10 +85,6 @@ export default function RootStack() {
                 component={Grammar}
             />
 
-            <Stack.Screen
-                name="Notification"
-                component={Notification}
-            />
 
             <Stack.Screen
                 name="GrammarDetail"
@@ -139,9 +135,6 @@ export default function RootStack() {
             <Stack.Screen
                 name="Notification"
                 component={Notification}
-                options={{
-                    headerShown: false,
-                }}
             />
             <Stack.Screen
                 name="Listening"
@@ -150,7 +143,7 @@ export default function RootStack() {
                     headerRight: () => <HeaderRight scrollRef={scrollRef} />,
                 }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
                 name="SectionRoot"
                 component={SectionRoot}
                 options={{
@@ -158,7 +151,7 @@ export default function RootStack() {
                 }}
             />
             <Stack.Screen name="Speaking" component={SpeakingExercise} />
-            <Stack.Screen name='Writing' component={WritingExercise} />
+            <Stack.Screen name='Writing' component={WritingExercise} /> */}
 
 
 
