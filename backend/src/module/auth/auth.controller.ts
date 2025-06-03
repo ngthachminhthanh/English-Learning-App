@@ -43,6 +43,8 @@ import {
       @UserReq() user: IUser,
       @Body() registerAuthDto: RegisterAuthDto,
     ) {
+      console.log("user",user)
+      console.log("registerAuthDto",registerAuthDto)
       const registerCognitoDto = this.mapper.map(
         registerAuthDto,
         RegisterAuthDto,
@@ -51,7 +53,7 @@ import {
       const cognitoId = await this.cognitoService.signUp(registerCognitoDto);
       const userCreated = this.mapper.map(registerAuthDto, RegisterAuthDto, User);
       userCreated.awsCognitoId = cognitoId;
-      const res = await this.authService.create(userCreated, user.userName);
+      const res = await this.authService.create(userCreated, registerAuthDto.username);
       return ResponseObject.create('User created', res);
     }
   
