@@ -20,17 +20,18 @@ import authService from "../../services/auth.service";
 
 const validationSchema = Yup.object().shape({
   username: Yup.string().required("Username is required"),
-  // firstName: Yup.string().required("First name is required"),
-  // lastName: Yup.string().required("Last name is required"),
-  // birthDate: Yup.date().required("Birth date is required"),
+  firstName: Yup.string().required("First name is required"),
+  lastName: Yup.string().required("Last name is required"),
+  birthDate: Yup.string().required("Birth date is required"),
   email: Yup.string().email().required("Email is required"),
-  // phone: Yup.string().required("Phone number is required"),
+  phone: Yup.string().required("Phone number is required"),
   // password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, 1 special character, and be at least 8 characters long.
   password: Yup.string().required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), undefined], "Passwords must match")
     .required("Confirm password is required"),
-  // schoolName: Yup.string().required("School name is required"),
+  degree: Yup.string().required("Degree is required"),
+  schoolName: Yup.string().required("School name is required"),
 });
 
 const SignUp = () => {
@@ -55,14 +56,15 @@ const SignUp = () => {
     try {
       const res = await authService.signUp({
         username: values.username,
-        // firstName: values.firstName,
-        // lastName: values.lastName,
-        // birthDate: values.birthDate,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        birthDate: values.birthDate,
         email: values.email,
-        // phone: values.phone,
+        phone: values.phone,
         password: values.password,
         role: "STUDENT",
-        // schoolName: values.schoolName,
+        degree: values.degree,
+        schoolName: values.schoolName,
       });
       console.log(res);
       if (res.statusCode === 201) {
@@ -110,24 +112,20 @@ const SignUp = () => {
         <Formik
           initialValues={{
             username: "",
-            // firstName: "",
-            // lastName: "",
-            // birthDate: new Date(),
+            firstName: "",
+            lastName: "",
+            birthDate: "",
             email: "",
-            // phone: "",
+            phone: "",
             password: "",
             confirmPassword: "",
-            // schoolName: "",
+            degree: "BACHELOR",
+            schoolName: "",
           }}
           validationSchema={validationSchema}
           onSubmit={(values) => {
             console.log("Form submitted", values);
-            // Call signUp API
-            // if successful navigate to OTPVerification screen
-            otpVerifyNav.navigate("OTPVerification", {
-              username: values.username,
-              isConfirmSignUp: true,
-            });
+            handleSignUp(values);
           }}
         >
           {({
@@ -150,6 +148,40 @@ const SignUp = () => {
               {errors.username && touched.username && (
                 <Text style={{ color: "red" }}>{errors.username}</Text>
               )}
+
+              <TextInput
+                placeholder="First Name"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("firstName")}
+                onBlur={handleBlur("firstName")}
+                value={values.firstName}
+              />
+              {errors.firstName && touched.firstName && (
+                <Text style={{ color: "red" }}>{errors.firstName}</Text>
+              )}
+
+              <TextInput
+                placeholder="Last Name"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("lastName")}
+                onBlur={handleBlur("lastName")}
+                value={values.lastName}
+              />
+              {errors.lastName && touched.lastName && (
+                <Text style={{ color: "red" }}>{errors.lastName}</Text>
+              )}
+
+              <TextInput
+                placeholder="Birth Date (YYYY-MM-DD)"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("birthDate")}
+                onBlur={handleBlur("birthDate")}
+                value={values.birthDate}
+              />
+              {errors.birthDate && touched.birthDate && (
+                <Text style={{ color: "red" }}>{errors.birthDate}</Text>
+              )}
+
               <TextInput
                 placeholder="Email"
                 className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
@@ -159,6 +191,18 @@ const SignUp = () => {
               />
               {errors.email && touched.email && (
                 <Text style={{ color: "red" }}>{errors.email}</Text>
+              )}
+
+              <TextInput
+                placeholder="Phone Number"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("phone")}
+                onBlur={handleBlur("phone")}
+                value={values.phone}
+                keyboardType="phone-pad"
+              />
+              {errors.phone && touched.phone && (
+                <Text style={{ color: "red" }}>{errors.phone}</Text>
               )}
 
               <TextInput
@@ -183,6 +227,28 @@ const SignUp = () => {
               />
               {errors.confirmPassword && touched.confirmPassword && (
                 <Text style={{ color: "red" }}>{errors.confirmPassword}</Text>
+              )}
+
+              <TextInput
+                placeholder="Degree (BACHELOR, MASTER, PHD)"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("degree")}
+                onBlur={handleBlur("degree")}
+                value={values.degree}
+              />
+              {errors.degree && touched.degree && (
+                <Text style={{ color: "red" }}>{errors.degree}</Text>
+              )}
+
+              <TextInput
+                placeholder="School Name"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("schoolName")}
+                onBlur={handleBlur("schoolName")}
+                value={values.schoolName}
+              />
+              {errors.schoolName && touched.schoolName && (
+                <Text style={{ color: "red" }}>{errors.schoolName}</Text>
               )}
 
               {/* <CheckBox

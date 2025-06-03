@@ -3,6 +3,13 @@ import { SafeAreaView, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import RootStack from "./src/Navigation/RootStack";
+// import * as Notifications from 'expo-notifications';
+
+// Notifications.setNotificationChannelAsync('default', {
+//   name: 'default',
+//   importance: Notifications.AndroidImportance.MAX,
+// });
+
 export default function App() {
   const Stack = createStackNavigator();
   return (

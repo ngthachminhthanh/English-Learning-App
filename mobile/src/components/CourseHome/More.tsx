@@ -29,7 +29,10 @@ export default function More() {
         />
         <Text style={styles.menuText}>Q&A</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.menuItem}>
+      <TouchableOpacity style={styles.menuItem}
+      
+        onPress={() => navigation.navigate("Notification")}
+      >
         <Icon name="bell" size={20} color="#666" style={styles.menuIcon} />
         <Text style={styles.menuText}>Announcements</Text>
       </TouchableOpacity>
