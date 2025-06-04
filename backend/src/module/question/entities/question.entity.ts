@@ -67,4 +67,12 @@ export class Question extends Base {
   @AutoMap()
   @Column({ nullable: true, type: 'text' })
   writtingPrompt?: string; // For WRITTING
+
+  @AutoMap()
+  @Column({ nullable: true, type: 'text' })
+  answer?: string; // For WRITTING
+
+  @AutoMap()
+  @Column({ type: 'text', array: true, nullable: true })
+  choices?: string[];
 }

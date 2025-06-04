@@ -15,7 +15,7 @@ export default function CourseItem({ srcImg, title, teacherName, progress, rated
                 <Icon className='' color={'#5D5FEF'} name='more-vert' type='material' size={15} onPress={() => {}}/>
             </View>
             <Text className='block font-normal text-[13px] text-[#7879F1] mb-[5px]'>{teacherName}</Text>
-            <LinearProgress value={progress/100} variant="determinate" className='w-full mb-[6px]' color='#EF5DA8' />
+            <LinearProgress value={parseInt(progress.toString())} variant="determinate" className='w-full mb-[6px]' color='#EF5DA8' />
             <View className='flex flex-row items-center justify-between mb-[6px]'>
                 <Text  className='text-[10px] font-normal text-[#A49E9E]'>{progress}% complete</Text>
                 <View className='flex flex-row items-center gap-[2px]'>

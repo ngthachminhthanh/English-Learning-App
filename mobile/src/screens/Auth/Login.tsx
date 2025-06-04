@@ -38,7 +38,9 @@ const Login = () => {
       if (res.statusCode === 201) {
         // res.data: { accessToken: string, refreshToken: string }
         await SecureStore.setItemAsync("accessToken", res.data.accessToken);
+
         // await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+
         navigation.navigate("BottomTabsNavigator");
       } else if (
         res.message === "Failed to sign in: Incorrect username or password." // temporary condition because statusCode is not different for cases
@@ -53,6 +55,7 @@ const Login = () => {
         });
       }
     } catch (err) {
+
       console.error("Sign in error:", err);
       
       // Enhanced error handling
@@ -81,6 +84,7 @@ const Login = () => {
       
       console.error("Detailed error:", errorMessage);
       Alert.alert("Failed to sign in", errorMessage);
+
     }
   };
   

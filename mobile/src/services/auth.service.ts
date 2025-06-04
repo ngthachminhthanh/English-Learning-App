@@ -9,6 +9,8 @@ class AuthService {
     return `${this.baseURI}${uri}`;
   }
   async signUp(data: any) {
+    console.log(this.getURI("sign-up"));
+    
     return await http.post(this.getURI("sign-up"), data);
   }
   async signIn(data: any) {

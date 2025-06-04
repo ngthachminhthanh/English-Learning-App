@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  Dimensions
+  Dimensions,
+  Modal,
+  TextInput
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -23,12 +25,16 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Button } from 'react-native-paper';
 import { Input } from 'react-native-elements';
 import HtmlReader from '../../components/HtmlReader';
-
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
+import questionService from '../../services/question.service';
+import * as DocumentPicker from 'expo-document-picker';
+import { uploadFile } from '../../utils/upload.util';
 const CONTENT_HEIGHT = 400;
 const BOTTOM_NAV_HEIGHT = 80;
 
 type ListeningExerciseProps = {
-  scrollRef?: React.RefObject<ScrollView>; 
+  scrollRef?: React.RefObject<ScrollView>;
 };
 
 export default function ListeningExerciseScreen() {
@@ -45,6 +51,167 @@ export default function ListeningExerciseScreen() {
   const [section, setSection] = useState<Section | null>(null);
   const { width } = Dimensions.get("window");
   const questionGroups = section ? section.questionGroups : [];
+  const [isTeacher, setIsTeacher] = useState<boolean>()
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [audioUrl, setAudioUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [fileUrl, setFileUrl] = useState<string>("")
+  const [selectedFileUrl, setSelectedFileUrl] = useState<any>(null);
+  const [mcqText, setMcqText] = useState('');
+  const [mcqChoices, setMcqChoices] = useState(['', '', '', '']);
+  const [mcqCorrect, setMcqCorrect] = useState<number | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<{ [questionId: string]: number }>({});
+
+  const handleAddMcq = async () => {
+    if (!mcqText.trim() || mcqChoices.some(c => !c.trim()) || mcqCorrect === null) {
+      console.log('Please fill all fields and select the correct answer.');
+
+      return;
+    }
+    try {
+      await questionService.createQuestionForSection({
+        type: "MULTIPLE_CHOICE",
+        sectionId: sectionID,
+        question: mcqText,
+        choices: mcqChoices,
+        answer: mcqChoices[mcqCorrect]
+      });
+
+      setQuestions(prev => [
+        ...prev,
+        {
+          id: Math.random().toString(), // Temporary local id
+          text: mcqText,
+          options: mcqChoices,
+          answered: false,
+        }
+      ]);
+      setShowAddModal(false);
+      setMcqText('');
+      setMcqChoices(['', '', '', '']);
+      setMcqCorrect(null);
+
+      // Optionally refresh questions here
+    } catch (err) {
+      console.log(err);
+
+    }
+  };
+
+  const pickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*', // Only allow audio files
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.assets && result.assets.length > 0) {
+        setSelectedFile(result.assets[0]);
+        setSelectedFileUrl(result.assets[0].uri)
+        // Convert DocumentPickerAsset to Blob
+        const asset = result.assets[0];
+        if (asset && asset.uri) {
+          const response = await fetch(asset.uri);
+          const blob = await response.blob();
+          // Create a File-like object if needed
+          const file = new File([blob], asset.name || "audio", { type: asset.mimeType || blob.type });
+          const key = await uploadFile(file, "listening file");
+          console.log("key", key);
+          console.log("file ", `https://d1fc7d6en42vzg.cloudfront.net/${key}`);
+          setFileUrl(`https://d1fc7d6en42vzg.cloudfront.net/${key}`)
+          await questionService.createQuestionForSection({
+            "type": "LISTENING",
+            "mp4Url": `https://d1fc7d6en42vzg.cloudfront.net/${key}`,
+            "sectionId": sectionID
+          })
+        }
+        // You can upload the file here or later
+      }
+    } catch (err) {
+      console.log('File pick error:', err);
+    }
+  };
+
+
+  // const handleAddQuestion = async () => {
+  //   await questionService.createQuestionForSection({
+  //     "type": "WRITING_QUESTION",
+  //     "writingPrompt": newQuestion,
+  //     "sectionId": sectionID
+  //   })
+  //   setNewQuestion(newQuestion);
+  //   setShowAddModal(false);
+  // };
+
+  useEffect(() => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string
+    }
+
+    const decodeTokenAndFetch = async () => {
+      // 1. Decode token and set isTeacher
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+      const username = decoded["username"]
+
+      setIsTeacher(groups?.includes("TEACHER"));
+      console.log(decoded);
+      console.log(groups?.includes("TEACHER"));
+
+      try {
+        const result = await questionService.getQuestionBySection({
+          "sectionId": sectionID,
+          "type": "LISTENING"
+        });
+        console.log("result", result);
+
+        if (result.statusCode === 201) {
+          setAudioUrl(result.data[0]?.writtingPrompt);
+        } else {
+          console.error(
+            "Error fetching course categories, status code: ",
+            result.statusCode
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching course categories:", error);
+      }
+
+      try {
+        const result = await questionService.getQuestionBySection({
+          "sectionId": sectionID,
+          "type": "MULTIPLE_CHOICE"
+        });
+        console.log("choices", result.data[0].choices)
+
+        if (result.statusCode === 201) {
+          setQuestions(prev => [
+            ...prev,
+            ...result.data.map((q: any) => ({
+              id: q.id || Math.random().toString(),
+              text: q.text,
+              options: q.choices,
+              answered: false,
+            }))
+          ]);
+        } else {
+          console.error(
+            "Error fetching course categories, status code: ",
+            result.statusCode
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching course categories:", error);
+      }
+      // 2. Fetch course categories
+
+    }
+    decodeTokenAndFetch();
+  }, []);
+
 
   useEffect(() => {
     const fetchSection = async () => {
@@ -72,9 +239,11 @@ export default function ListeningExerciseScreen() {
 
   useEffect(() => {
     const loadAudio = async () => {
-      if (section && section.sectionMedia) {
+      if (audioUrl) {
+        console.log("audioUrl", audioUrl);
+
         const { sound } = await Audio.Sound.createAsync(
-          { uri: section.sectionMedia },
+          { uri: audioUrl },
           { shouldPlay: false }
         );
         setSound(sound);
@@ -165,13 +334,33 @@ export default function ListeningExerciseScreen() {
     }
   };
 
-  if (!section) {
-    return <Text>Loading...</Text>;
-  }
+
   return (
     <SafeAreaView style={styles.container}>
 
       <View style={styles.audioPlayer}>
+        {isTeacher && (
+          <>
+            <TouchableOpacity
+              style={{
+                backgroundColor: colors.blue1,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                alignSelf: "center",
+                marginBottom: 16,
+              }}
+              onPress={pickFile}
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>Pick Audio File</Text>
+            </TouchableOpacity>
+            {selectedFile && (
+              <Text style={{ textAlign: 'center', marginBottom: 8 }}>
+                Selected: {selectedFile.name}
+              </Text>
+            )}
+          </>
+        )}
         <Text style={styles.playAudioText}>Play audio</Text>
         <View style={styles.playerControls}>
           <TouchableOpacity onPress={handlePlayPause}>
@@ -205,50 +394,210 @@ export default function ListeningExerciseScreen() {
         className="reading-exercise flex gap-4"
         ref={scrollViewRef}
       >
-        <View
-          className="reading-questions"
-          style={{ display: "flex", gap: 20 }}
-        >
-          {questionGroups ? (
-            <>
-              {questionGroups.map((questionGroup, groupIndex) => (
-              <ScrollView key={groupIndex} style={styles.readingQuestions}>
-                <HtmlReader html={questionGroup.text} />
-                {questionGroup.questions.map((question, questionIndex) => (
-                    <View key={question.id} style={{ marginBottom: 10 }}>
-                    <Text style={{ fontWeight: 'bold' }}>
-                      {groupIndex + 1}.{questionIndex + 1}. {question.text}
-                    </Text>
-                    <Input
-                      style={styles.input}
-                      underlineColorAndroid="transparent"
-                      inputContainerStyle={{ borderBottomWidth: 0 }} // Remove the underline
-                      onChangeText={(value) => handleInputChange(question.id, value)}
-                    />
+        {isTeacher && (
+          <>
+            <TouchableOpacity
+              style={{
+                backgroundColor: colors.pink1,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                alignSelf: "center",
+                marginBottom: 8,
+              }}
+              onPress={() => setShowAddModal(true)}
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>Add Multiple Choice Question</Text>
+            </TouchableOpacity>
+
+            <Modal
+              visible={showAddModal}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setShowAddModal(false)}
+            >
+              <View style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0,0,0,0.4)'
+              }}>
+                <View style={{
+                  backgroundColor: '#fff',
+                  padding: 20,
+                  borderRadius: 16,
+                  width: '90%'
+                }}>
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>Add Multiple Choice Question</Text>
+                  <TextInput
+                    placeholder="Question text"
+                    value={mcqText}
+                    onChangeText={setMcqText}
+                    style={{
+                      borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 8, padding: 8
+                    }}
+                  />
+                  {mcqChoices.map((choice, idx) => (
+                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                      <TouchableOpacity
+                        style={{
+                          width: 20, height: 20, borderRadius: 10, borderWidth: 1,
+                          borderColor: mcqCorrect === idx ? colors.blue1 : '#ccc',
+                          backgroundColor: mcqCorrect === idx ? colors.blue1 : '#fff',
+                          marginRight: 8,
+                          justifyContent: 'center', alignItems: 'center'
+                        }}
+                        onPress={() => setMcqCorrect(idx)}
+                      >
+                        {mcqCorrect === idx && <View style={{
+                          width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff'
+                        }} />}
+                      </TouchableOpacity>
+                      <TextInput
+                        placeholder={`Choice ${idx + 1}`}
+                        value={choice}
+                        onChangeText={text => {
+                          const newChoices = [...mcqChoices];
+                          newChoices[idx] = text;
+                          setMcqChoices(newChoices);
+                        }}
+                        style={{
+                          flex: 1,
+                          borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8
+                        }}
+                      />
                     </View>
-                ))}
-              </ScrollView>
-              ))}
-            </>
+                  ))}
+                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
+                    <Button onPress={() => setShowAddModal(false)} style={{ marginRight: 8 }}>Cancel</Button>
+                    <Button mode="contained" onPress={handleAddMcq}>Add</Button>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          </>
+        )}
+
+        <View className="reading-questions" style={{ gap: 20, paddingHorizontal: 8 }}>
+          {questions.length > 0 ? (
+            questions.map((question, idx) => (
+              <View
+                key={question.id}
+                style={{
+                  marginBottom: 16,
+                  backgroundColor: '#f8f8ff',
+                  borderRadius: 14,
+                  padding: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10, color: colors.blue1 }}>
+                  {idx + 1}. {question.text}
+                </Text>
+                {question.options && question.options.length > 0 ? (
+                  question.options.map((option, oidx) => (
+                    <TouchableOpacity
+                      key={oidx}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 8,
+                        backgroundColor:
+                          selectedOptions[question.id] === oidx ? colors.pink1 : '#fff',
+                        borderWidth: 1,
+                        borderColor:
+                          selectedOptions[question.id] === oidx ? colors.pink1 : '#e0e0e0',
+                      }}
+                      onPress={() =>
+                        setSelectedOptions((prev) => ({
+                          ...prev,
+                          [question.id]: oidx,
+                        }))
+                      }
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          borderWidth: 2,
+                          borderColor: colors.pink1,
+                          marginRight: 12,
+                          backgroundColor:
+                            selectedOptions[question.id] === oidx ? colors.pink1 : '#fff',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {selectedOptions[question.id] === oidx && (
+                          <View
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: 5,
+                              backgroundColor: '#fff',
+                            }}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          color: selectedOptions[question.id] === oidx ? '#fff' : '#333',
+                        }}
+                      >
+                        {option}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Input
+                    style={styles.input}
+                    underlineColorAndroid="transparent"
+                    inputContainerStyle={{ borderBottomWidth: 0 }}
+                    onChangeText={(value) => handleInputChange(question.id, value)}
+                    inputStyle={{ fontSize: 15, color: '#333' }}
+                    placeholder="Type your answer"
+                    containerStyle={{ marginTop: 8 }}
+                  />
+                )}
+              </View>
+            ))
           ) : (
             <Text>No questions available</Text>
           )}
         </View>
-        <TouchableOpacity
-          onPress={() => {}}
-          style={styles.submitButton}
-        >
-          <Text style={styles.submitButtonText}>Submit</Text>
-        </TouchableOpacity>
+
+        {
+          !isTeacher && (
+            <>
+              <TouchableOpacity
+                onPress={() => { }}
+                style={styles.submitButton}
+              >
+                <Text style={styles.submitButtonText}>Submit</Text>
+              </TouchableOpacity>
+            </>
+          )
+        }
+
 
       </ScrollView>
-     
+
       <BottomNavigation
         questions={questions}
         answeredQuestions={answeredQuestions}
         currentQuestion={currentQuestion}
         onQuestionChange={handleQuestionChange}
-        
+
       />
     </SafeAreaView>
   );

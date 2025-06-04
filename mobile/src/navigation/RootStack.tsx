@@ -11,6 +11,9 @@ import HeaderRight from "../Navigation/HeaderRight";
 import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
+import SpeakingExercise from "../components/Speaking.tsx";
+import WritingExercise from "../screens/Writing/WritingExercise";
+import SectionRoot from "../screens/SectionRoot";
 import {
 
   AuthCongrats,
@@ -115,7 +118,7 @@ export default function RootStack() {
     />
       <Stack.Screen name="Speaking" component={SpeakingExercise} />
       <Stack.Screen name='Writing' component={WritingExercise} />
-     
+    
     
     </Stack.Navigator>
   );

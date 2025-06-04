@@ -1,24 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, Modal, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as FileSystem from 'expo-file-system';
 import colors from '../../../colors';
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
+import questionService from '../../services/question.service';
+import { useRoute } from '@react-navigation/native';
 
 export default function SpeakingExercise() {
+  const [isTeacher, setIsTeacher] = useState<boolean>()
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [question, setQuestion] = useState("What's your favorite book and why?");
+  const [question, setQuestion] = useState("");
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null);
+  const route = useRoute<any>()
+    const { sectionID } = route.params || {};
 
+  useEffect(() => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string
+    }
 
+    const decodeTokenAndFetch = async () => {
+      // 1. Decode token and set isTeacher
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+      const username = decoded["username"]
 
+      setIsTeacher(groups?.includes("TEACHER"));
+      console.log(decoded);
+      console.log(groups?.includes("TEACHER"));
+
+      try {
+        const result = await questionService.getQuestionBySection({
+          "sectionId": sectionID,
+          "type": "SPEAKING_QUESTION"
+        });
+        console.log("result", result);
+
+        if (result.statusCode === 201) {
+          setQuestion(result.data[0]?.speakingPrompt);
+        } else {
+          console.error(
+            "Error fetching course categories, status code: ",
+            result.statusCode
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching course categories:", error);
+      }
+      // 2. Fetch course categories
+
+    }
+    decodeTokenAndFetch();
+  }, []);
   useEffect(() => {
     return () => {
       if (recording) {
@@ -29,6 +77,17 @@ export default function SpeakingExercise() {
       }
     };
   }, [recording, sound]);
+
+  const handleAddQuestion = async () => {
+    await questionService.createQuestionForSection({
+      "type": "SPEAKING_QUESTION",
+      "speakingPrompt": newQuestion,
+      "sectionId": sectionID
+    })
+    setQuestion(newQuestion); 
+    setShowAddModal(false);
+    setNewQuestion("");
+  };
 
   async function startRecording() {
     try {
@@ -151,9 +210,25 @@ export default function SpeakingExercise() {
 
   return (
     <View style={styles.container}>
+
+      {isTeacher && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.blue1,
+            borderRadius: 20,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            alignSelf: "center",
+            marginBottom: 16,
+          }}
+          onPress={() => setShowAddModal(true)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Question</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.card}>
         <Text className='font-sans text-header-2' style={styles.title}>Speaking Exercise</Text>
-        <Text className='font-sans text-body'style={styles.question}>{question}</Text>
+        <Text className='font-sans text-body' style={styles.question}>{question}</Text>
         <TouchableOpacity
           onPress={isRecording ? stopRecording : startRecording}
           style={styles.recordButton}
@@ -184,23 +259,23 @@ export default function SpeakingExercise() {
               <Text style={styles.timeText}>{formatTime(duration)}</Text>
             </View>
             <View style={styles.buttonRow}>
-                <TouchableOpacity
+              <TouchableOpacity
                 onPress={isPlaying ? pauseRecording : playRecording}
                 style={styles.playButton}
-                >
-            
+              >
+
                 {isPlaying ? (
-                    <Icon name="pause" size={24} color={colors.blue2} />
+                  <Icon name="pause" size={24} color={colors.blue2} />
                 ) : (
-                    <Icon name="play" size={24} color={colors.blue2} />
+                  <Icon name="play" size={24} color={colors.blue2} />
                 )}
-                </TouchableOpacity>
-                <TouchableOpacity
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={replayRecording}
                 style={styles.replayButton}
-                >
+              >
                 <Icon name="repeat" size={24} color={colors.blue2} />
-                </TouchableOpacity>
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               onPress={saveRecording}
@@ -211,6 +286,55 @@ export default function SpeakingExercise() {
           </View>
         )}
       </View>
+
+      <Modal visible={showAddModal} transparent animationType="fade">
+        <View style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.3)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}>
+          <View style={{
+            backgroundColor: "#fff",
+            padding: 20,
+            borderRadius: 10,
+            width: "90%",
+          }}>
+            <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Add New Speaking Question</Text>
+            <TextInput
+              placeholder="Enter speaking question"
+              value={newQuestion}
+              onChangeText={setNewQuestion}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                borderRadius: 8,
+                padding: 10,
+                marginBottom: 10,
+              }}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: "#eee",
+                borderRadius: 8,
+                marginRight: 8,
+              }}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddQuestion} style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: colors.blue1,
+                borderRadius: 8,
+              }}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
