@@ -11,6 +11,9 @@ import HeaderRight from "./HeaderRight";
 import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
+import SpeakingExercise from "../components/Speaking.tsx";
+import WritingExercise from "../screens/Writing/WritingExercise";
+import SectionRoot from "../screens/SectionRoot";
 import {
     // AuthCongrats,
     // ForgotPassword,
@@ -36,7 +39,7 @@ export default function RootStack() {
     const Stack = createStackNavigator();
     const scrollRef = useRef<ScrollView>(null);
     return (
-        <Stack.Navigator initialRouteName="CourseViewer">
+        <Stack.Navigator initialRouteName="Login">
             <Stack.Screen
                 name="SplashScreen"
                 component={SplashScreen}
@@ -143,7 +146,7 @@ export default function RootStack() {
                     headerRight: () => <HeaderRight scrollRef={scrollRef} />,
                 }}
             />
-            {/* <Stack.Screen
+            <Stack.Screen
                 name="SectionRoot"
                 component={SectionRoot}
                 options={{
@@ -151,7 +154,7 @@ export default function RootStack() {
                 }}
             />
             <Stack.Screen name="Speaking" component={SpeakingExercise} />
-            <Stack.Screen name='Writing' component={WritingExercise} /> */}
+            <Stack.Screen name='Writing' component={WritingExercise} />
 
 
 

@@ -1,12 +1,16 @@
-import { Text, View, TouchableOpacity, ScrollView } from "react-native";
+import { Text, View, TouchableOpacity, ScrollView, Modal, TextInput, StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import VocabFrame, { VocabItem } from "./VocabFrame";
 import MainHeader from "../../components/MainHeader";
 import { useNavigation } from "@react-navigation/native";
 import { FlashCardNavigationProp } from "../../type";
+import { useRoute } from "@react-navigation/native";
 import { Icon } from "@rneui/themed";
 import { scheduleStudyReminder } from "../../utils/notification.util";
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
+import questionService from "../../services/question.service";
 
 const initialVocab: VocabItem[] = [
   { id: 1, term: "home(n)", translation: "nhà", checked: false, showImage: true },
@@ -16,8 +20,55 @@ const initialVocab: VocabItem[] = [
 
 const Vocabulary = () => {
   const navigation = useNavigation<FlashCardNavigationProp>();
-  const [vocabList, setVocabList] = useState<VocabItem[]>(initialVocab);
+  const [isTeacher, setIsTeacher] = useState<boolean>();
+  const [vocabList, setVocabList] = useState<VocabItem[]>([]);
   const [tab, setTab] = useState<"all" | "notLearned">("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newVocab, setNewVocab] = useState({ term: "", translation: "" });
+
+  const route = useRoute<any>()
+  const { sectionID } = route.params || {};
+  useEffect(() => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string;
+    }
+
+    const decodeTokenAndFetch = async () => {
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+      setIsTeacher(groups?.includes("TEACHER"));
+
+      try {
+        const result = await questionService.getQuestionBySection({
+          "sectionId": sectionID,
+          "type": "VOCAB"
+        });
+        console.log("result", result);
+
+        if (result.statusCode === 201) {
+          setVocabList(result.data.map((item: any, idx: number) => ({
+            id: item.id, 
+            term: item.word || "",
+            translation: item.meaning || "",
+            checked: false, 
+            showImage: false
+          })));
+        } else {
+          console.error(
+            "Error fetching course categories, status code: ",
+            result.statusCode
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching course categories:", error);
+      }
+    };
+
+    decodeTokenAndFetch();
+  }, []);
 
   const handleToggle = (id: number) => {
     setVocabList(prev =>
@@ -29,7 +80,6 @@ const Vocabulary = () => {
     tab === "all" ? vocabList : vocabList.filter(word => !word.checked);
 
   const handleFlashcard = () => {
-    const notLearned = vocabList.filter(word => !word.checked);
     navigation.navigate("FlashCard", { wordList: vocabList });
   };
   const handleLearningNotification = () => {
@@ -37,15 +87,39 @@ const Vocabulary = () => {
     navigation.navigate("Notification", { wordList: notLearned });
   };
 
+  const handleAddVocab = async () => {
+    await questionService.createQuestionForSection({
+      type: "VOCAB",
+      word: newVocab.term,
+      meaning: newVocab.translation,
+      sectionId: sectionID
+    });
+    setVocabList(prev => [
+      ...prev,
+      {
+        id: prev.length ? prev[prev.length - 1].id + 1 : 1,
+        term: newVocab.term,
+        translation: newVocab.translation,
+        checked: false,
+      },
+    ]);
+    setShowAddModal(false);
+    setNewVocab({ term: "", translation: "" });
+  };
+
   return (
     <SafeAreaView>
-      <MainHeader
-        onBellPress={() => handleLearningNotification()}
-      />
-      {/* MainHeader with bell button moved to the header area */}
+      <MainHeader onBellPress={handleLearningNotification} />
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 16, marginTop: 16 }}>
         <Text style={{ fontSize: 22, fontWeight: "bold", color: "#5D5FEF" }}>Vocabulary</Text>
-
+        {isTeacher && (
+          <TouchableOpacity
+            style={{ backgroundColor: "#5D5FEF", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 }}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View className="mx-4 my-5">
@@ -57,58 +131,142 @@ const Vocabulary = () => {
         </View>
 
         {/* Tabs */}
-        <View className="flex flex-row mt-3 gap-5">
-          <TouchableOpacity onPress={() => setTab("all")}>
-            <Text className={`text-sm font-normal ${tab === "all" ? "text-[#5d5fef]" : "text-[#a5a6f6]"}`}>
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setTab("notLearned")}>
-            <Text className={`text-sm font-normal ${tab === "notLearned" ? "text-[#5d5fef]" : "text-[#a5a6f6]"}`}>
-              Not learned
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {
+          !isTeacher && (
+            <>
+              <View className="flex flex-row mt-3 gap-5">
+                <TouchableOpacity onPress={() => setTab("all")}>
+                  <Text className={`text-sm font-normal ${tab === "all" ? "text-[#5d5fef]" : "text-[#a5a6f6]"}`}>
+                    All
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setTab("notLearned")}>
+                  <Text className={`text-sm font-normal ${tab === "notLearned" ? "text-[#5d5fef]" : "text-[#a5a6f6]"}`}>
+                    Not learned
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )
+        }
+
 
         {/* Vocab list */}
         <ScrollView style={{ marginTop: 30 }}>
-          {filteredList.map(word => (
+          {vocabList.length>0? vocabList.map(word => (
             <VocabFrame key={word.id} word={word} onToggle={() => handleToggle(word.id)} />
-          ))}
+          ))
+          :
+          <Text>
+            No vocab
+          </Text>
+        
+        }
         </ScrollView>
 
         {/* Buttons */}
-        <View className="mt-5 items-center">
-          <TouchableOpacity
-            onPress={handleFlashcard}
-            style={{
-              borderColor: "#ef5da8",
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingVertical: 8,
-              paddingHorizontal: 20,
-              marginBottom: 10,
-            }}
-          >
-            <Text style={{ color: "#ef5da8", fontWeight: "600" }}>
-              Learn with flashcards
-            </Text>
-          </TouchableOpacity>
+        {
+          !isTeacher && (
+            <>
+              <View className="mt-5 items-center">
+                <TouchableOpacity
+                  onPress={handleFlashcard}
+                  style={{
+                    borderColor: "#ef5da8",
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    paddingVertical: 8,
+                    paddingHorizontal: 20,
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ color: "#ef5da8", fontWeight: "600" }}>
+                    Learn with flashcards
+                  </Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#ef5da8",
-              borderRadius: 10,
-              paddingVertical: 12,
-              paddingHorizontal: 50,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>Create quiz</Text>
-          </TouchableOpacity>
-        </View>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#ef5da8",
+                    borderRadius: 10,
+                    paddingVertical: 12,
+                    paddingHorizontal: 50,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "700" }}>Create quiz</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )
+        }
+
       </View>
+
+      {/* Add Vocab Modal */}
+      <Modal visible={showAddModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Add New Vocab</Text>
+            <TextInput
+              placeholder="Term (e.g. home(n))"
+              value={newVocab.term}
+              onChangeText={text => setNewVocab({ ...newVocab, term: text })}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Translation"
+              value={newVocab.translation}
+              onChangeText={text => setNewVocab({ ...newVocab, translation: text })}
+              style={styles.input}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.cancelBtn}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddVocab} style={styles.addBtn}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "90%",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#eee",
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  addBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#5D5FEF",
+    borderRadius: 8,
+  },
+});
 
 export default Vocabulary;

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Image, Button } from "react-native";
+import { View, Text, ScrollView, Image, Button, TouchableOpacity, TextInput } from "react-native";
 import React, { useState, useEffect } from "react";
 import DirectToSectionCard from "../../components/Home/DirectToSectionCard";
 import CategoryCard from "../../components/Home/CategoryCard";
@@ -9,9 +9,18 @@ import courseService from "../../services/course.service";
 import { Course } from "../../models";
 import MainHeader from "../../components/MainHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
+
+// Example usage:
 
 const Home = () => {
-  const userName = "Emma";
+
+  const [isTeacher, setIsTeacher] = useState<boolean>()
+  const [userName, setUserName] = useState("")
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
   interface CourseCategory {
     id: string;
     name: string;
@@ -23,11 +32,30 @@ const Home = () => {
   const [recommendationCourses, setRecommendationCourses] = useState<Course[]>(
     []
   );
-  // use Course model for now, will be changed to RecommendationCourse model later
+
   useEffect(() => {
-    const fetchCourseCategories = async () => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string
+    }
+
+    const decodeTokenAndFetch = async () => {
+      // 1. Decode token and set isTeacher
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+      const username = decoded["username"]
+      setUserName(username)
+      setIsTeacher(groups?.includes("TEACHER"));
+      console.log(decoded);
+      console.log(groups?.includes("TEACHER"));
+
+      // 2. Fetch course categories
       try {
         const result = await courseCategoryService.getCourseCategories();
+        console.log("result", result);
+        
         if (result.statusCode === 200) {
           setCourseCategories(result.data);
         } else {
@@ -39,8 +67,8 @@ const Home = () => {
       } catch (error) {
         console.error("Error fetching course categories:", error);
       }
-    };
-    const fetchRecommendationCourses = async () => {
+
+      // 3. Fetch recommendation courses
       try {
         const res = await courseService.getAllCourses(); // change to getRecommendationCourses later
         if (res.statusCode === 200) {
@@ -56,11 +84,10 @@ const Home = () => {
       }
     };
 
-    fetchCourseCategories();
-    fetchRecommendationCourses();
+    decodeTokenAndFetch();
   }, []);
- 
- 
+
+
 
   return (
     <SafeAreaView>
@@ -100,7 +127,24 @@ const Home = () => {
         <View className="categories flex flex-col gap-2">
           <View className="heading flex flex-row justify-between items-center">
             <Text className="text-lg font-bold text-blue1">Categories</Text>
-            <Text className="text-sm text-blue1">View all</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Text className="text-sm text-blue1">View all</Text>
+              {isTeacher && (
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: "#5D5FEF",
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    marginLeft: 8,
+                  }}
+                  onPress={() => setShowCreateCategory(true)}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Create</Text>
+                </TouchableOpacity>
+              )}
+
+            </View>
           </View>
           <ScrollView
             horizontal
@@ -115,6 +159,78 @@ const Home = () => {
               <CategoryCard name={category.name} key={category.id} />
             ))}
           </ScrollView>
+
+          {/* Create Category Popup */}
+          {showCreateCategory && (
+            <View
+              style={{
+                position: "absolute",
+                top: 100,
+                left: 0,
+                right: 0,
+                backgroundColor: "#fff",
+                padding: 20,
+                margin: 20,
+                borderRadius: 10,
+                elevation: 10,
+                zIndex: 100,
+              }}
+            >
+              <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>
+                Create Category
+              </Text>
+              <TextInput
+                placeholder="Category name"
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 16,
+                }}
+              />
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setShowCreateCategory(false)}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: "#eee",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={async () => {
+                    // Call your API or update state here
+                    if (newCategoryName.trim()) {
+                      await courseCategoryService.createCourseCategories({
+                        "name": newCategoryName
+                      })
+                      // Optionally call your backend to create the category
+                      setCourseCategories([
+                        ...courseCategories,
+                        { id: Date.now().toString(), name: newCategoryName },
+                      ]);
+                      setNewCategoryName("");
+                      setShowCreateCategory(false);
+                    }
+                  }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    backgroundColor: "#5D5FEF",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>Create</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
         <View className="recommend flex flex-col gap-2">
           <View className="heading flex flex-row items-center">
@@ -132,7 +248,7 @@ const Home = () => {
             }}
           >
             {Array.isArray(recommendationCourses) &&
-            recommendationCourses.length > 0 ? (
+              recommendationCourses.length > 0 ? (
               recommendationCourses.map((course) => (
                 <CourseCard course={course} key={course.id} />
               ))

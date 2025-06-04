@@ -79,19 +79,19 @@ class Http {
     };
 
     let response = await fetch(url, options);
-    if (response.status === 401) {
-      try {
-        const newAccessToken = await this.refreshToken();
-        options.headers = {
-          ...options.headers,
-          Authorization: `Bearer ${newAccessToken}`,
-        };
-        response = await fetch(url, options);
-      } catch (error) {
-        console.error("Failed to refresh token:", error);
-        throw error;
-      }
-    }
+    // if (response.status === 401) {
+    //   try {
+    //     const newAccessToken = await this.refreshToken();
+    //     options.headers = {
+    //       ...options.headers,
+    //       Authorization: `Bearer ${newAccessToken}`,
+    //     };
+    //     response = await fetch(url, options);
+    //   } catch (error) {
+    //     console.error("Failed to refresh token:", error);
+    //     throw error;
+    //   }
+    // }
 
     return response.json();
   }

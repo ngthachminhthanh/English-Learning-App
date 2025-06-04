@@ -8,6 +8,14 @@ class CourseService {
   private getURI(uri: string) {
     return `${this.baseURI}${uri}`;
   }
+
+  async createCourses(data: any) {
+    return await http.post(this.getURI(""), data)
+  }
+
+  async getTeacherCourses () {
+    return await http.get(this.getURI("teacher/my-course"))
+  }
   async getAllCourses() {
     return await http.get(this.getURI("get-all-courses"));
   }

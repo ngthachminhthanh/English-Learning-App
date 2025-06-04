@@ -9,9 +9,33 @@ import Vocabulary from "../screens/Vocabulary";
 import Grammar from "../screens/Grammar";
 import Learning from "../screens/Learning";
 import MainHeader from "../components/MainHeader";
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
 const Tab = createMaterialBottomTabNavigator();
 
 export default function BottomTabsNavigator() {
+  const [isTeacher, setIsTeacher] = useState<boolean>()
+  useEffect(() => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string
+    }
+
+    const decodeTokenAndFetch = async () => {
+      // 1. Decode token and set isTeacher
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+
+      setIsTeacher(groups?.includes("TEACHER"));
+      console.log(decoded);
+      console.log(groups?.includes("TEACHER"));
+    };
+
+    decodeTokenAndFetch();
+  }, []);
   return (
     <>
       <Tab.Navigator
@@ -41,7 +65,7 @@ export default function BottomTabsNavigator() {
           name="learning"
           component={Learning} // change this to LearningScreen later
           options={{
-            tabBarLabel: "Learning",
+            tabBarLabel: isTeacher ? "Course" : "Learning",
             tabBarIcon: ({ color }) => (
               <Icon name="school" type="material" color={color} />
             ),

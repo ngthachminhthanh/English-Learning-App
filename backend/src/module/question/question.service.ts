@@ -42,7 +42,10 @@ export class QuestionService {
   paragraph?: string,
   mp4Url?: string,
   speakingPrompt?: string,
-  writingPrompt?: string
+  writingPrompt?: string,
+  answer?: string,
+  question?: string,
+  choices?: string[]
 }) {
   try {
     const section = await this.dataSource.getRepository(Section).findOne({
@@ -67,6 +70,10 @@ export class QuestionService {
       question.speakingPrompt = body.speakingPrompt;
     } else if (body.type === 'WRITING_QUESTION') {
       question.writtingPrompt = body.writingPrompt;
+    } else if (body.type == 'MULTIPLE_CHOICE') {
+      question.text = body.question
+      question.answer = body.answer
+      question.choices = body.choices
     }
 
     const saved = await this.dataSource.getRepository(Question).save(question);
