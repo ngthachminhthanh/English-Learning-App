@@ -39,9 +39,20 @@ export type RootStackParamList = {
     QandA: undefined
     FlashCard: { wordList: VocabItem[]; }
   };
+
 export type HeaderNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Notification"
+>;
+
+export type LoginScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
+
+export type OTPVerificationScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "OTPVerification"
 >;
 
 export type LearningScreenNavigationProp = StackNavigationProp<
@@ -58,7 +69,6 @@ export type FlashCardNavigationProp = StackNavigationProp<
   RootStackParamList,
   "FlashCard"
 >;
-
 
 export type GrammarScreenNavigationProp = StackNavigationProp<
   RootStackParamList,

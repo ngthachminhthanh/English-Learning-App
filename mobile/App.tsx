@@ -2,8 +2,9 @@ import React from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import RootStack from "./src/navigation/RootStack";
-import * as Notifications from 'expo-notifications';
+import RootStack from "./src/Navigation/RootStack";
+// import * as Notifications from 'expo-notifications';
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -12,6 +13,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: true,
   }),
 });
+
 
 
 export default function App() {

@@ -37,6 +37,7 @@ import { log } from 'console';
       private readonly cognitoService: CognitoService,
     ) {}
   
+
       @Public()
       @Post(END_POINTS.AUTH.SIGN_UP)
       @ApiOperation({ summary: 'Register a new user' })
@@ -57,6 +58,7 @@ import { log } from 'console';
         const res = await this.authService.create(userCreated, registerAuthDto.username);
         return ResponseObject.create('User created', res);
       }
+
   
     // @Public()
     // @Post(END_POINTS.AUTH.OAUTH2_CREATE)

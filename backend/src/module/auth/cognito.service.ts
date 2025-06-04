@@ -90,8 +90,9 @@ export class CognitoService {
           Value: registerCognitoDto.name,
         },
         {
-          Name: 'given_name', 
-          Value: registerCognitoDto.name, 
+          Name: 'given_name',
+          Value: registerCognitoDto.name,
+
         },
       ],
     });
