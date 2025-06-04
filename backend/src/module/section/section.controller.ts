@@ -36,90 +36,102 @@ export class SectionController {
   constructor(
     private readonly sectionService: SectionService,
     @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  ) { }
 
-  @Post(END_POINTS.SECTION.CREATE)
+  // @Post(END_POINTS.SECTION.CREATE)
+  // @ApiOperation({
+  //   summary: 'Create a new section',
+  // })
+  // async create(@Body() createSectionDto: CreateSectionDto) {
+  //   // console.log(createSectionDto);
+  //   const section = await this.mapper.mapAsync(
+  //     createSectionDto,
+  //     CreateSectionDto,
+  //     Section,
+  //   );
+
+  //   const questionGroups = [];
+  //   const questions = [];
+
+  //   if (createSectionDto.sectionQuestionGroups) {
+  //     createSectionDto.sectionQuestionGroups.forEach((sectionQuestionGroup) => {
+  //       const newQuestionGroup = this.mapper.map(
+  //         sectionQuestionGroup,
+  //         SectionQuestionDto,
+  //         QuestionGroup,
+  //       );
+  //       if (!newQuestionGroup.questions) {
+  //         newQuestionGroup.questions = [];
+  //       }
+  //       sectionQuestionGroup.questions.forEach((question) => {
+  //         const newQuestion = this.mapper.map(
+  //           question,
+  //           CreateQuestionDto,
+  //           Question,
+  //         );
+  //         newQuestion.questionGroup = newQuestionGroup;
+  //         if (!newQuestion.answers) {
+  //           newQuestion.answers = [];
+  //         }
+  //         question.answers.forEach((answer) => {
+  //           const newAnswer = this.mapper.map(answer, CreateAnswerDto, Answer);
+  //           newAnswer.question = newQuestion;
+  //           newQuestion.answers.push(newAnswer);
+  //         });
+  //         newQuestionGroup.questions.push(newQuestion);
+  //       });
+
+  //       newQuestionGroup.section = section;
+  //       questionGroups.push(newQuestionGroup);
+  //     });
+  //   }
+  //   if (createSectionDto.sectionQuestions) {
+  //     createSectionDto.sectionQuestions.forEach((sectionQuestion) => {
+  //       const newQuestion = this.mapper.map(
+  //         sectionQuestion,
+  //         CreateQuestionDto,
+  //         Question,
+  //       );
+  //       newQuestion.section = section;
+  //       if (!newQuestion.answers) {
+  //         newQuestion.answers = [];
+  //       }
+  //       sectionQuestion.answers.forEach((answer) => {
+  //         const newAnswer = this.mapper.map(answer, CreateAnswerDto, Answer);
+  //         newAnswer.question = newQuestion;
+  //         newQuestion.answers.push(newAnswer);
+  //       });
+
+  //       questions.push(newQuestion);
+  //     });
+  //   }
+  //   section.questionGroups = questionGroups;
+  //   section.questions = questions;
+
+  //   const newSection = await this.sectionService.create(
+  //     createSectionDto.lessonId,
+  //     section,
+  //   );
+
+  //   const response = await this.mapper.mapAsync(
+  //     newSection,
+  //     ResponseSectionDto,
+  //     ResponseSectionDto,
+  //   );
+
+  //   return ResponseObject.create('Section created successfully', response);
+  // }
+
+  @Post('/teacher/create')
   @ApiOperation({
-    summary: 'Create a new section',
+    summary: 'Teacher creates a section with mock data format',
   })
-  async create(@Body() createSectionDto: CreateSectionDto) {
-    // console.log(createSectionDto);
-    const section = await this.mapper.mapAsync(
-      createSectionDto,
-      CreateSectionDto,
-      Section,
-    );
-
-    const questionGroups = [];
-    const questions = [];
-
-    if (createSectionDto.sectionQuestionGroups) {
-      createSectionDto.sectionQuestionGroups.forEach((sectionQuestionGroup) => {
-        const newQuestionGroup = this.mapper.map(
-          sectionQuestionGroup,
-          SectionQuestionDto,
-          QuestionGroup,
-        );
-        if (!newQuestionGroup.questions) {
-          newQuestionGroup.questions = [];
-        }
-        sectionQuestionGroup.questions.forEach((question) => {
-          const newQuestion = this.mapper.map(
-            question,
-            CreateQuestionDto,
-            Question,
-          );
-          newQuestion.questionGroup = newQuestionGroup;
-          if (!newQuestion.answers) {
-            newQuestion.answers = [];
-          }
-          question.answers.forEach((answer) => {
-            const newAnswer = this.mapper.map(answer, CreateAnswerDto, Answer);
-            newAnswer.question = newQuestion;
-            newQuestion.answers.push(newAnswer);
-          });
-          newQuestionGroup.questions.push(newQuestion);
-        });
-
-        newQuestionGroup.section = section;
-        questionGroups.push(newQuestionGroup);
-      });
-    }
-    if (createSectionDto.sectionQuestions) {
-      createSectionDto.sectionQuestions.forEach((sectionQuestion) => {
-        const newQuestion = this.mapper.map(
-          sectionQuestion,
-          CreateQuestionDto,
-          Question,
-        );
-        newQuestion.section = section;
-        if (!newQuestion.answers) {
-          newQuestion.answers = [];
-        }
-        sectionQuestion.answers.forEach((answer) => {
-          const newAnswer = this.mapper.map(answer, CreateAnswerDto, Answer);
-          newAnswer.question = newQuestion;
-          newQuestion.answers.push(newAnswer);
-        });
-
-        questions.push(newQuestion);
-      });
-    }
-    section.questionGroups = questionGroups;
-    section.questions = questions;
-
-    const newSection = await this.sectionService.create(
-      createSectionDto.lessonId,
-      section,
-    );
-
-    const response = await this.mapper.mapAsync(
-      newSection,
-      Section,
-      ResponseSectionDto,
-    );
-
-    return ResponseObject.create('Section created successfully', response);
+  async teacherCreateSection(@Body() body: any) {
+    const section = await this.sectionService.createSectionFromMock(body);
+    return {
+      message: 'Section created successfully',
+      data: section,
+    };
   }
 
   @Get(END_POINTS.SECTION.GET_ALL_SECTION_BY_LESSON)
@@ -137,7 +149,7 @@ export class SectionController {
     const sections = await this.sectionService.findAllByLesson(lessonId);
     const responses = await this.mapper.mapArrayAsync(
       sections,
-      Section,
+      Section, // Use the DTO that matches the output shape
       ResponseSectionDto,
     );
     return ResponseObject.create('Sections found', responses);

@@ -26,6 +26,7 @@ import {
   import { ApiOperation, ApiTags } from '@nestjs/swagger';
   import { ForgotPasswordDto } from './dto/forgot-password.dto';
   import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
+import { log } from 'console';
   
   @ApiTags(DOCUMENTATION.TAGS.AUTH)
   @Controller(END_POINTS.AUTH.BASE)
@@ -36,24 +37,26 @@ import {
       private readonly cognitoService: CognitoService,
     ) {}
   
-    @Public()
-    @Post(END_POINTS.AUTH.SIGN_UP)
-    @ApiOperation({ summary: 'Register a new user' })
-    async signUp(
-      @UserReq() user: IUser,
-      @Body() registerAuthDto: RegisterAuthDto,
-    ) {
-      const registerCognitoDto = this.mapper.map(
-        registerAuthDto,
-        RegisterAuthDto,
-        RegisterCognitoDto,
-      );
-      const cognitoId = await this.cognitoService.signUp(registerCognitoDto);
-      const userCreated = this.mapper.map(registerAuthDto, RegisterAuthDto, User);
-      userCreated.awsCognitoId = cognitoId;
-      const res = await this.authService.create(userCreated, user.userName);
-      return ResponseObject.create('User created', res);
-    }
+      @Public()
+      @Post(END_POINTS.AUTH.SIGN_UP)
+      @ApiOperation({ summary: 'Register a new user' })
+      async signUp(
+        @UserReq() user: IUser,
+        @Body() registerAuthDto: RegisterAuthDto,
+      ) {
+        console.log("user",user)
+        console.log("registerAuthDto",registerAuthDto)
+        const registerCognitoDto = this.mapper.map(
+          registerAuthDto,
+          RegisterAuthDto,
+          RegisterCognitoDto,
+        );
+        const cognitoId = await this.cognitoService.signUp(registerCognitoDto);
+        const userCreated = this.mapper.map(registerAuthDto, RegisterAuthDto, User);
+        userCreated.awsCognitoId = cognitoId;
+        const res = await this.authService.create(userCreated, registerAuthDto.username);
+        return ResponseObject.create('User created', res);
+      }
   
     // @Public()
     // @Post(END_POINTS.AUTH.OAUTH2_CREATE)

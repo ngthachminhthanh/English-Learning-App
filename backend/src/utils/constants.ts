@@ -170,6 +170,9 @@ export const END_POINTS = {
     COMBO_BOX = 'COMBO_BOX',
     BLANK = 'BLANK',
     MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
+    VOCAB = 'VOCAB',
+    READING = 'READING',
+    LISTENING = 'LISTENING'
   }
   
   export enum QUESTION_GROUP_TYPE {
@@ -183,6 +186,8 @@ export const END_POINTS = {
     READING = 'READING',
     LISTENING = 'LISTENING',
     VOCABULARY = 'VOCABULARY',
+    SPEAKING = 'SPEAKING',
+    WRITING = 'WRITING'
   }
   
   export enum USER_ROLES {

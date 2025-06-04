@@ -26,7 +26,7 @@ interface RedisConfig {
               '..',
               '..',
               'services/DiscountService',
-              'Protos/discount.proto',
+              'Protos/Discount.proto',
             ),
             url: configService.get<string>('grpcDiscountUrl'),
           },

@@ -18,9 +18,10 @@ import { Question } from './entities/question.entity';
 import { Answer } from '../answer/entities/answer.entity';
 import { CreateAnswerDto } from '../answer/dto/create-answer.dto';
 import { ResponseObject } from 'src/utils/objects';
-import { DOCUMENTATION, END_POINTS } from 'src/utils/constants';
+import { DOCUMENTATION, END_POINTS, QUESTION_TYPE } from 'src/utils/constants';
 import { UpdateAnswerDto } from '../answer/dto/update-answer.dto';
 import { groupQuestionsByQuestionGroup } from './functions/functions';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiBearerAuth()
 @Controller(END_POINTS.QUESTION.BASE)
@@ -29,7 +30,34 @@ export class QuestionController {
   constructor(
     private readonly questionService: QuestionService,
     @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  ) { }
+
+
+  @Post('create-by-type')
+  @ApiOperation({ summary: 'Create a new question by type' })
+  async createByType(@Body() body: {
+    type: QUESTION_TYPE,
+    sectionId: string,
+    word?: string,
+    wordType?: string,
+    meaning?: string,
+    paragraph?: string,
+    mp4Url?: string,
+    speakingPrompt?: string,
+    writingPrompt?: string
+  }) {
+    const newQuestion = await this.questionService.createByType(body);
+    return ResponseObject.create('Question created by type', newQuestion);
+  }
+
+
+  @Public()
+  @Post('get-by-type')
+  @ApiOperation({ summary: 'Get questions by section and type' })
+  async getByType(@Body() body: { sectionId: string; type: QUESTION_TYPE }) {
+    const questions = await this.questionService.getByType(body.sectionId, body.type);
+    return ResponseObject.create('Questions found', questions);
+  }
 
   @Post(END_POINTS.QUESTION.CREATE)
   @ApiOperation({ summary: 'Create a new question with its answers' })

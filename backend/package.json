@@ -13,7 +13,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
-    "proto:generate": "npx protoc --plugin=protoc-gen-ts_proto=\".\\\\node_modules\\\\.bin\\\\protoc-gen-ts_proto.cmd\" --ts_proto_opt=esModuleInterop=true --ts_proto_out=C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\types --ts_proto_opt=nestJs=true -I=C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\services\\DiscountService\\Protos C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\services\\DiscountService\\Protos\\discount.proto",
+    "proto:generate": "npx protoc --plugin=protoc-gen-ts_proto=\".\\\\node_modules\\\\.bin\\\\protoc-gen-ts_proto.cmd\" --ts_proto_opt=esModuleInterop=true --ts_proto_out=C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\types --ts_proto_opt=nestJs=true -I=C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\services\\DiscountService\\Protos C:\\Users\\Loi\\WebstormProjects\\English-Learning\\backend\\src\\services\\DiscountService\\Protos\\Discount.proto",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
