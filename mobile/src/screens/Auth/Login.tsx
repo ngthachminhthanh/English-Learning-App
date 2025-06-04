@@ -18,6 +18,7 @@ import {
 } from "../../type";
 import authService from "../../services/auth.service";
 import * as SecureStore from "expo-secure-store";
+
 const validationSchema = Yup.object().shape({
   username: Yup.string().required("Username is required"),
   password: Yup.string().required("Password is required"),
@@ -27,32 +28,66 @@ const Login = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const otpVerifyNav = useNavigation<OTPVerificationScreenNavigationProp>();
   const [rememberMe, setRememberMe] = useState(false);
+  
   const handleSignIn = async (values: any) => {
-    console.log(values);
+    console.log("Attempting sign in with:", values);
     try {
       const res = await authService.signIn(values);
+      console.log("Sign in response:", res);
+      
       if (res.statusCode === 201) {
         // res.data: { accessToken: string, refreshToken: string }
         await SecureStore.setItemAsync("accessToken", res.data.accessToken);
-        //await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+
+        // await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
+
         navigation.navigate("BottomTabsNavigator");
       } else if (
         res.message === "Failed to sign in: Incorrect username or password." // temporary condition because statusCode is not different for cases
       ) {
-        // console.error(res.message);
+        console.error("Sign in failed - incorrect credentials:", res.message);
         Alert.alert("Failed to sign in", "Incorrect username or password.");
       } else {
-        // console.error(res.message);
+        console.log("Need OTP verification:", res.message);
         otpVerifyNav.navigate("OTPVerification", {
           username: values.username,
           isConfirmSignUp: true,
         });
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert("Failed to sign in", "An error occurred.");
+
+      console.error("Sign in error:", err);
+      
+      // Enhanced error handling
+      let errorMessage = "An error occurred.";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err === 'object') {
+        // If it's a network error or API error
+        if ('message' in err) {
+          errorMessage = err.message;
+        } else if ('response' in err && err.response) {
+          // Axios error structure
+          const response = err.response as any;
+          if (response.data && response.data.message) {
+            errorMessage = response.data.message;
+          } else if (response.statusText) {
+            errorMessage = `${response.status}: ${response.statusText}`;
+          }
+        } else {
+          errorMessage = JSON.stringify(err);
+        }
+      }
+      
+      console.error("Detailed error:", errorMessage);
+      Alert.alert("Failed to sign in", errorMessage);
+
     }
   };
+  
   return (
     <ImageBackground
       source={require("../../../assets/signupbg.png")}
@@ -88,7 +123,8 @@ const Login = () => {
           }}
           validationSchema={validationSchema}
           onSubmit={(values) => {
-            console.log(values);
+            console.log("Form submitted with values:", values);
+            handleSignIn(values);
           }}
         >
           {({
@@ -162,6 +198,7 @@ const Login = () => {
                   width: 150,
                 }}
                 onPress={() => {
+                  console.log("Login button pressed");
                   handleSignIn(values);
                 }}
               />
