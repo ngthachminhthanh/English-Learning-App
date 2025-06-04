@@ -92,6 +92,7 @@ export class CognitoService {
         {
           Name: 'given_name',
           Value: registerCognitoDto.name,
+
         },
       ],
     });

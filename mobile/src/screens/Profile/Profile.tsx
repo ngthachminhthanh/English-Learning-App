@@ -13,9 +13,9 @@ import InputField from "./InputField";
 import userService from "../../services/user.service";
 import MainHeader from "../../components/MainHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+// import DateTimePicker, {
+//   DateTimePickerEvent,
+// } from "@react-native-community/datetimepicker";
 import authService from "../../services/auth.service";
 import { useNavigation } from "@react-navigation/native";
 import { LoginScreenNavigationProp } from "../../type";
@@ -44,16 +44,16 @@ const Profile = () => {
   const handleInputChange = (field: string, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
-  const [show, setShow] = useState(false);
-  const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShow(false);
-    if (selectedDate) {
-      setProfile((prev) => ({
-        ...prev,
-        birthDate: selectedDate.toISOString(),
-      }));
-    }
-  };
+  // const [show, setShow] = useState(false);
+  // const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  //   setShow(false);
+  //   if (selectedDate) {
+  //     setProfile((prev) => ({
+  //       ...prev,
+  //       birthDate: selectedDate.toISOString(),
+  //     }));
+  //   }
+  // };
 
   const loginNav = useNavigation<LoginScreenNavigationProp>();
   useEffect(() => {
@@ -189,14 +189,14 @@ const Profile = () => {
                   })}
                 </Text>
               </View>
-              {show && (
+              {/* {show && (
                 <DateTimePicker
                   value={new Date(profile.birthDate)}
                   mode="date" // Use "time" for time picker or "datetime" for both
                   display="default" // "default", "spinner", or "calendar" (iOS-specific options)
                   onChange={onChange} // Callback when the date is changed
                 />
-              )}
+              )} */}
             </TouchableOpacity>
           </View>
           <InputField

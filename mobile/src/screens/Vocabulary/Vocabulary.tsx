@@ -1,11 +1,12 @@
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import VocabFrame, { VocabItem } from "./VocabFrame";
 import MainHeader from "../../components/MainHeader";
 import { useNavigation } from "@react-navigation/native";
 import { FlashCardNavigationProp } from "../../type";
 import { Icon } from "@rneui/themed";
+import { scheduleStudyReminder } from "../../utils/notification.util";
 
 const initialVocab: VocabItem[] = [
   { id: 1, term: "home(n)", translation: "nhà", checked: false, showImage: true },
@@ -29,13 +30,17 @@ const Vocabulary = () => {
 
   const handleFlashcard = () => {
     const notLearned = vocabList.filter(word => !word.checked);
+    navigation.navigate("FlashCard", { wordList: vocabList });
+  };
+  const handleLearningNotification = () => {
+    const notLearned = vocabList.filter(word => !word.checked);
     navigation.navigate("Notification", { wordList: notLearned });
   };
 
   return (
     <SafeAreaView>
       <MainHeader
-        onBellPress={() => handleFlashcard()}
+        onBellPress={() => handleLearningNotification()}
       />
       {/* MainHeader with bell button moved to the header area */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: 16, marginTop: 16 }}>

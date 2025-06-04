@@ -44,7 +44,7 @@ export class SectionProfile extends AutomapperProfile {
         ResponseSectionDto,
         forMember(
           (src) => src.lessonId,
-          mapFrom((d) => d.lesson.id),
+          mapFrom((d) => d.lessonId),
         ),
       );
     };

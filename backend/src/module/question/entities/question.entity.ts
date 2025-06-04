@@ -18,7 +18,7 @@ export class Question extends Base {
   @ManyToOne(() => Section, (section) => section.questions)
   section: Section;
   @AutoMap()
-  @Column()
+  @Column({ nullable: true })
   text: string;
   @AutoMap()
   @Column({
@@ -37,6 +37,34 @@ export class Question extends Base {
   })
   answers: Answer[];
   @AutoMap()
-  @Column()
+  @Column({ nullable: true })
   order: number;
+
+  @AutoMap()
+  @Column({ nullable: true })
+  word?: string;         // For VOCAB
+
+  @AutoMap()
+  @Column({ nullable: true })
+  wordType?: string;     // For VOCAB
+
+  @AutoMap()
+  @Column({ nullable: true })
+  meaning?: string;      // For VOCAB
+
+  @AutoMap()
+  @Column({ nullable: true, type: 'text' })
+  paragraph?: string;    // For READING
+
+  @AutoMap()
+  @Column({ nullable: true })
+  mp4Url?: string;       // For LISTENING
+
+  @AutoMap()
+  @Column({ nullable: true, type: 'text' })
+  speakingPrompt?: string; // For SPEAKING
+
+  @AutoMap()
+  @Column({ nullable: true, type: 'text' })
+  writtingPrompt?: string; // For WRITTING
 }

@@ -12,12 +12,14 @@ import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
 import {
+
   AuthCongrats,
   ForgotPassword,
   Login,
   OTPVerification,
   ResetPassword,
   SignUp,
+
 } from "../screens/Auth";
 import SplashScreen from "../screens/Splash/SplashScreen";
 import CheckKey from "../screens/CourseDetail/CheckKey";
@@ -27,6 +29,7 @@ import SpeakingExercise from "../components/Speaking.tsx";
 import WritingExercise from "../screens/Writing/WritingExercise";
 
 export default function RootStack() {
+
   const Stack = createStackNavigator();
   const scrollRef = useRef<ScrollView>(null);
   return (
@@ -112,10 +115,9 @@ export default function RootStack() {
     />
       <Stack.Screen name="Speaking" component={SpeakingExercise} />
       <Stack.Screen name='Writing' component={WritingExercise} />
-      
-     
      
     
     </Stack.Navigator>
   );
+
 }

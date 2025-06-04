@@ -11,15 +11,58 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import colors from "../../../colors";
-import { Lesson, Section } from "../../models";
-import lessonService from "../../services/lesson.service";
-import sectionService from "../../services/section.service";
+// import { Lesson, Section } from "../../models";
+// import lessonService from "../../services/lesson.service";
+// import sectionService from "../../services/section.service";
 import { CourseDetailScreenNavigationProp, CourseScreenRouteProp } from "../../type";
 import More from "./More";
 import { ActivityIndicator } from "react-native-paper";
 import HTML from 'react-native-render-html';  // Import HTML renderer
 import { scheduleStudyReminder } from '../../utils/notification.util';
 const { height } = Dimensions.get("window");
+
+// --- Mock Data ---
+type Section = {
+  id: string;
+  title: string;
+  type: string;
+  uri?: string;
+  completed?: boolean;
+};
+
+type Lesson = {
+  id: string;
+  name: string;
+  content: string;
+  sections: Section[];
+};
+
+const mockLessons: Lesson[] = [
+  {
+    id: "lesson1",
+    name: "Lesson 1: Introduction",
+    content: "<p>Welcome to Lesson 1!</p>",
+    sections: [
+      { id: "sec1", title: "Vocabulary", type: "vocab" },
+      { id: "sec2", title: "Grammar", type: "grammar" },
+      { id: "sec3", title: "Listening Practice", type: "LISTENING", completed: true },
+      { id: "sec4", title: "Reading Practice", type: "READING", completed: false },
+    ],
+  },
+  {
+    id: "lesson2",
+    name: "Lesson 2: Daily Life",
+    content: "<p>Let's talk about daily life.</p>",
+    sections: [
+      { id: "sec5", title: "Vocabulary", type: "vocab" },
+      { id: "sec6", title: "Grammar", type: "grammar" },
+      { id: "sec7", title: "Speaking Practice", type: "SPEAKING", completed: false },
+      { id: "sec8", title: "Writing Practice", type: "WRITING", completed: true },
+      { id: "sec9", title: "Video Lesson", type: "video", uri: "https://www.w3schools.com/html/mov_bbb.mp4" },
+    ],
+  },
+];
+// --- End Mock Data ---
 
 export default function CourseViewer() {
   const [currentSectionId, setCurrentSectionId] = useState("");
@@ -45,50 +88,70 @@ export default function CourseViewer() {
     categoryName: "Toeic Listening",
     thumbnail_image: "https://d1fc7d6en42vzg.cloudfront.net//https://example.com/thumbnail.jpg",
   };
-  
 
   useEffect(() => {
-    fetchLessons();
+    // fetchLessons();
+    // Use mock data instead of API
+    setTimeout(() => {
+      setLessons(mockLessons);
+      setIsLoading(false);
+    }, 500);
   }, []);
 
-  const fetchLessons = async () => {
-    try {
-      const res = await lessonService.getAllLessonsByCourse(course.id);
-      console.log("Lessons API Response:", res);
-      if (res && Array.isArray(res.data)) {
-        const lessonsWithSections = await Promise.all(
-          res.data.map(async (lesson: Lesson) => {
-            const sections = await fetchSection(lesson.id);
-            return { ...lesson, sections: sections ?? [] };
-          })
-        );
-        console.log("Lessons with Sections:", lessonsWithSections);
-        setLessons(lessonsWithSections);
-      } else {
-        setError("No lessons found");
-      }
-    } catch (error) {
-      setError("Error fetching lessons");
-      console.error("Error fetching lessons:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const fetchLessons = async () => {
+  //   try {
+  //     const res = await lessonService.getAllLessonsByCourse(course.id);
+  //     console.log("Lessons API Response:", res);
+  //     if (res && Array.isArray(res.data)) {
+  //       const lessonsWithSections = await Promise.all(
+  //         res.data.map(async (lesson: Lesson) => {
+  //           const sections = await fetchSection(lesson.id);
+  //           return { ...lesson, sections: sections ?? [] };
+  //         })
+  //       );
+  //       console.log("Lessons with Sections:", lessonsWithSections);
+  //       setLessons(lessonsWithSections);
+  //     } else {
+  //       setError("No lessons found");
+  //     }
+  //   } catch (error) {
+  //     setError("Error fetching lessons");
+  //     console.error("Error fetching lessons:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  const fetchSection = async (lessonId: string) => {
-    try {
-      const res = await sectionService.getSection(lessonId);
-      console.log(`Sections API Response for lesson ${lessonId}:`, res);
-      if (res.data && Array.isArray(res.data)) {
-        return res.data;
-      }
-      console.warn(`No sections found for lesson ${lessonId}`);
-      return [];
-    } catch (error) {
-      console.error(`Error fetching sections for lesson ${lessonId}:`, error);
-      return [];
-    }
-  };
+  // const fetchSection = async (lessonId: string) => {
+  //   try {
+  //     const res = await sectionService.getSection(lessonId);
+  //     console.log(`Sections API Response for lesson ${lessonId}:`, res);
+  //     if (res.data && Array.isArray(res.data)) {
+  //       return res.data;
+  //     }
+  //     console.warn(`No sections found for lesson ${lessonId}`);
+  //     return [];
+  //   } catch (error) {
+  //     console.error(`Error fetching sections for lesson ${lessonId}:`, error);
+  //     return [];
+  //   }
+  // };
+
+  useEffect(() => {
+    const scheduleNotification = async () => {
+      await scheduleStudyReminder(
+        "Engdigo",
+        "Hey checkout the lesson you're studying!"
+      );
+    };
+
+    scheduleNotification();
+
+    // Cleanup function if needed
+    return () => {
+      // Any cleanup logic if necessary
+    };
+  },[])
 
   const handleReplay = () => {
     if (videoRef.current) {
@@ -179,10 +242,8 @@ export default function CourseViewer() {
             <View key={lessonIndex} style={styles.lessonContainer}>
               <Text style={styles.lessonTitle}>{lesson.name}</Text>
               <Text style={styles.lessonTitle}>
-
                 <HTML source={{ html: lesson.content }} />
               </Text>
-              
               <View style={styles.sectionListContainer}>
                 <View style={styles.row}>
                   {lesson.sections

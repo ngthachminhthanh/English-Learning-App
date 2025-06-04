@@ -5,10 +5,16 @@ import { createStackNavigator } from "@react-navigation/stack";
 import RootStack from "./src/Navigation/RootStack";
 // import * as Notifications from 'expo-notifications';
 
-// Notifications.setNotificationChannelAsync('default', {
-//   name: 'default',
-//   importance: Notifications.AndroidImportance.MAX,
-// });
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: true,
+  }),
+});
+
+
 
 export default function App() {
   const Stack = createStackNavigator();

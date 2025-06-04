@@ -5,6 +5,8 @@ import { DOCUMENTATION, END_POINTS } from '../../utils/constants';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ResponseObject } from '../../utils/objects';
 import { PresignedUrlDto } from './dto/presigned-url.dto';
+import { Public } from 'src/common/decorators/public.decorator';
+
 
 @ApiBearerAuth()
 @ApiTags(DOCUMENTATION.TAGS.FILE)
@@ -12,6 +14,7 @@ import { PresignedUrlDto } from './dto/presigned-url.dto';
 export class S3Controller {
   constructor(private readonly s3Service: S3Service) {}
 
+  @Public()
   @Get(END_POINTS.FILE.UPLOAD)
   @ApiOperation({
     summary: 'Get a pre-signed URL to upload a file',

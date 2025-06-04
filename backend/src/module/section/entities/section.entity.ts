@@ -12,12 +12,11 @@ export class Section extends Base {
   @Column()
   @AutoMap()
   title: string;
-  @Column({
-    nullable: true,
-  })
+
+  @Column({ nullable: true })
   @AutoMap()
   content?: string;
-  @Column()
+
   @Column({
     type: 'enum',
     enum: SECTION_TYPE,
@@ -25,21 +24,28 @@ export class Section extends Base {
   })
   @AutoMap()
   type: SECTION_TYPE;
-  @Column({
-    nullable: true,
-  })
+
+  @Column({ nullable: true })
   @AutoMap()
   sectionMedia?: string;
+
   @ManyToOne(() => Lesson, (lesson) => lesson.sections)
   lesson: Lesson;
+
+  @Column({ nullable: false })
+  @AutoMap()
+  lessonId: string; // <-- Add this line
+
   @OneToMany(() => QuestionGroup, (questionGroup) => questionGroup.section, {
     cascade: true,
   })
   questionGroups: QuestionGroup[];
+
   @OneToMany(() => Question, (question) => question.section, {
     cascade: true,
   })
   questions: Question[];
+
   @OneToMany(
     () => SectionProgress,
     (sectionProgress) => sectionProgress.section,
