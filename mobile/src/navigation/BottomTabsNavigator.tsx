@@ -12,10 +12,12 @@ import MainHeader from "../components/MainHeader";
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
+import Admin from "../screens/Admin/Admin";
 const Tab = createMaterialBottomTabNavigator();
 
 export default function BottomTabsNavigator() {
   const [isTeacher, setIsTeacher] = useState<boolean>()
+  const [isAdmin, setIsAdmin] = useState<boolean | undefined>(false);
   useEffect(() => {
     interface DecodedToken {
       [key: string]: any;
@@ -30,6 +32,8 @@ export default function BottomTabsNavigator() {
       const groups = decoded["cognito:groups"];
 
       setIsTeacher(groups?.includes("TEACHER"));
+      setIsAdmin(groups?.includes("ADMIN"))
+
       console.log(decoded);
       console.log(groups?.includes("TEACHER"));
     };
@@ -50,28 +54,43 @@ export default function BottomTabsNavigator() {
           borderTopColor: "#FCDDEC",
         }}
       >
-        <Tab.Screen
-          name="home"
-          component={Home} // change this to HomeScreen later
-          options={{
-            tabBarLabel: "Home",
+        {isAdmin ? (
+          <Tab.Screen
+            name="home"
+            component={Admin} // change this to HomeScreen later
+            options={{
+              tabBarLabel: "",
 
-            tabBarIcon: ({ color }) => (
-              <Icon name="home" type="ant-design" color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="learning"
-          component={Learning} // change this to LearningScreen later
-          options={{
-            tabBarLabel: isTeacher ? "Course" : "Learning",
-            tabBarIcon: ({ color }) => (
-              <Icon name="school" type="material" color={color} />
-            ),
-          }}
-        />
-        {/* <Tab.Screen
+              tabBarIcon: ({ color }) => (
+                <Icon name="home" type="ant-design" color={color} />
+              ),
+            }}
+          />
+        ) : (
+          <>
+
+            <Tab.Screen
+              name="home"
+              component={Home} // change this to HomeScreen later
+              options={{
+                tabBarLabel: "Home",
+
+                tabBarIcon: ({ color }) => (
+                  <Icon name="home" type="ant-design" color={color} />
+                ),
+              }}
+            />
+            <Tab.Screen
+              name="learning"
+              component={Learning} // change this to LearningScreen later
+              options={{
+                tabBarLabel: isTeacher ? "Course" : "Learning",
+                tabBarIcon: ({ color }) => (
+                  <Icon name="school" type="material" color={color} />
+                ),
+              }}
+            />
+            {/* <Tab.Screen
           name="vocabulary"
           component={Vocabulary} // change this to VocabularyScreen later
           options={{
@@ -81,26 +100,29 @@ export default function BottomTabsNavigator() {
             ),
           }}
         /> */}
-        <Tab.Screen
-          name="grammar"
-          component={Grammar} // change this to GrammarScreen later
-          options={{
-            tabBarLabel: "Grammar",
-            tabBarIcon: ({ color }) => (
-              <Icon name="spellcheck" type="material" color={color} />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="profile"
-          component={Profile} // change this to ProfileScreen later
-          options={{
-            tabBarLabel: "Profile",
-            tabBarIcon: ({ color }) => (
-              <Icon name="person-outline" type="material" color={color} />
-            ),
-          }}
-        />
+            <Tab.Screen
+              name="grammar"
+              component={Grammar} // change this to GrammarScreen later
+              options={{
+                tabBarLabel: "Grammar",
+                tabBarIcon: ({ color }) => (
+                  <Icon name="spellcheck" type="material" color={color} />
+                ),
+              }}
+            />
+            <Tab.Screen
+              name="profile"
+              component={Profile} // change this to ProfileScreen later
+              options={{
+                tabBarLabel: "Profile",
+                tabBarIcon: ({ color }) => (
+                  <Icon name="person-outline" type="material" color={color} />
+                ),
+              }}
+            />
+          </>
+        )}
+
       </Tab.Navigator>
     </>
   );

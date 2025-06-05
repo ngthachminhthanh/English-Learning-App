@@ -34,14 +34,14 @@ import {
     password: string;
   
     @AutoMap()
-    @IsEnum(['TEACHER', 'STUDENT'], {
+    @IsEnum(['TEACHER', 'STUDENT', 'ADMIN'], {
       message: 'Role must be either TEACHER or STUDENT',
     })
     @ApiProperty({
-      enum: ['TEACHER', 'STUDENT'],
+      enum: ['TEACHER', 'STUDENT', 'ADMIN'],
       description: 'Role of the user',
     })
-    role: 'TEACHER' | 'STUDENT';
+    role: 'TEACHER' | 'STUDENT' | 'ADMIN';
   
     @AutoMap()
     @IsOptional()

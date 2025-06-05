@@ -29,6 +29,11 @@ export class AuthService {
             student.userInfo = user;
             await manager.save(student);
             break;
+          case 'ADMIN':
+            const admin = new Teacher();
+            admin.userInfo = user;
+            await manager.save(admin);
+            break;
           default:
             throw new Error('Invalid role');
         }

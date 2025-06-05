@@ -9,6 +9,15 @@ class UserService {
       throw new Error(`HTTP error! status: ${error.message}`);
     }
   }
+
+  async getAllUser() {
+    try {
+      const response = await http.get("user/all");
+      return response;
+    } catch (error: any) {
+      throw new Error(`HTTP error! status: ${error.message}`);
+    }
+  }
   async updateUser(data: object) {
     try {
       const response = await http.patch("user/update", data);

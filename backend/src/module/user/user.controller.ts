@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 
 import { User } from '../../common/decorators/user.decorator';
@@ -11,6 +11,7 @@ import { Mapper } from '@automapper/core';
 import { UserDto } from './dto/userD.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../auth/auth.service';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiBearerAuth()
 @ApiTags(DOCUMENTATION.TAGS.USER)
@@ -20,7 +21,24 @@ export class UserController {
     private readonly userService: UserService,
     private readonly authService: AuthService,
     @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  ) { }
+
+  @Public()
+  @Get("all")
+  @ApiOperation({ summary: 'Get all users' })
+  async getAllUsers() {
+    const users = await this.userService.findAll();
+    return ResponseObject.create('All users retrieved', users);
+  }
+
+  @Public()
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a user by aws user ID' })
+  async deleteUser(@Param('id') id: string) {
+    await this.userService.deleteUser(id);
+    return ResponseObject.create('User deleted');
+  }
+
 
   @Get(END_POINTS.USER.ME)
   @ApiOperation({ summary: 'Get user information' })

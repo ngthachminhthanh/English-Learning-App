@@ -7,7 +7,7 @@ import { Teacher } from './entities/teacher.entity';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) { }
 
   async findMe(awsId: string) {
     const user = await this.dataSource.getRepository(User).findOneOrFail({
@@ -37,6 +37,15 @@ export class UserService {
     }
     return user;
   }
+
+  async findAll(): Promise<User[]> {
+    return this.dataSource.getRepository(User).find();
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await this.dataSource.getRepository(User).delete(id);
+  }
+
 
   async getUserRole(awsId: string) {
     const user = await this.dataSource.getRepository(User).findOneOrFail({

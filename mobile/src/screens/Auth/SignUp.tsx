@@ -241,6 +241,17 @@ const SignUp = () => {
               )}
 
               <TextInput
+                placeholder="Degree (BACHELOR, MASTER, PHD)"
+                className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
+                onChangeText={handleChange("degree")}
+                onBlur={handleBlur("degree")}
+                value={values.degree}
+              />
+              {errors.degree && touched.degree && (
+                <Text style={{ color: "red" }}>{errors.degree}</Text>
+              )}
+
+              <TextInput
                 placeholder="School Name"
                 className="border-2 border-[#EF5DA8] w-[280] h-10 rounded-[10px] items-center px-4"
                 onChangeText={handleChange("schoolName")}
