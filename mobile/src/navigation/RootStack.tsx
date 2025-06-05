@@ -1,5 +1,5 @@
 import { createStackNavigator } from "@react-navigation/stack";
-import BottomTabsNavigator from "../Navigation/BottomTabsNavigator";
+import BottomTabsNavigator from "./BottomTabsNavigator";
 import CourseDetail from "../screens/CourseDetail";
 import CourseHome from "../components/CourseHome";
 import GrammarDetail from "../screens/Grammar/GrammarDetail";
@@ -7,7 +7,7 @@ import Reading from "../screens/Reading";
 import PayWithBank from "../screens/CourseDetail/PayWithBank";
 import PayWithCard from "../screens/CourseDetail/PayWithCard";
 import Notification from "../screens/Notification";
-import HeaderRight from "../Navigation/HeaderRight";
+import HeaderRight from "./HeaderRight";
 import { useRef } from "react";
 import { ScrollView } from "react-native-gesture-handler";
 import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
@@ -27,9 +27,7 @@ import {
 import SplashScreen from "../screens/Splash/SplashScreen";
 import CheckKey from "../screens/CourseDetail/CheckKey";
 import DetailGrammar from "../screens/Grammar/DetailGrammar";
-import SectionRoot from "../screens/SectionRoot";
-import SpeakingExercise from "../components/Speaking.tsx";
-import WritingExercise from "../screens/Writing/WritingExercise";
+
 
 export default function RootStack() {
 
