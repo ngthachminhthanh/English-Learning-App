@@ -27,6 +27,7 @@ import {
 import SplashScreen from "../screens/Splash/SplashScreen";
 import CheckKey from "../screens/CourseDetail/CheckKey";
 import DetailGrammar from "../screens/Grammar/DetailGrammar";
+import Vocabulary from "../screens/Vocabulary";
 
 
 export default function RootStack() {
@@ -79,6 +80,11 @@ export default function RootStack() {
       />
 
       <Stack.Screen name="CourseDetail" component={CourseDetail} />
+      <Stack.Screen name="Vocabulary" component={Vocabulary} options={
+        {
+          headerShown: false
+        }
+      }/>
       <Stack.Screen name="CourseHome" component={CourseHome} />
       <Stack.Screen name="GrammarDetail" component={DetailGrammar} />
       <Stack.Screen
