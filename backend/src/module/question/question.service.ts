@@ -83,6 +83,42 @@ export class QuestionService {
   }
 }
 
+async updateByType(body: {
+    questionId: string,
+    word?: string,
+    wordType?: string,
+    meaning?: string,
+    paragraph?: string,
+    mp4Url?: string,
+    speakingPrompt?: string,
+    writingPrompt?: string
+  }) {
+    const { questionId, ...updateFields } = body;
+    // Remove undefined fields
+    Object.keys(updateFields).forEach(
+      (key) => updateFields[key] === undefined && delete updateFields[key]
+    );
+    
+    await this.dataSource.getRepository(Question).update(
+      { id: questionId },
+      updateFields
+    );
+    return this.dataSource.getRepository(Question).findOne({ where: { id: questionId } });
+  }
+
+  async deleteByType({
+
+    questionId,
+  }: {
+
+    questionId: string;
+  }) {
+    const result = await this.dataSource.getRepository(Question).delete({
+      id: questionId,
+    });
+    return result.affected > 0;
+  }
+
 async getByType(sectionId: string, type: QUESTION_TYPE) {
   try {
     const questions = await this.dataSource.getRepository(Question).find({

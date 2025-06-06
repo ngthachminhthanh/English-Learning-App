@@ -78,6 +78,37 @@ export class QuestionController {
     return ResponseObject.create('Question created', newQuestion);
   }
 
+  @Public()
+  @Put('update-by-type')
+  @ApiOperation({ summary: 'Update a question by type' })
+  async updateByType(@Body() body: {
+    type: QUESTION_TYPE,
+    sectionId: string,
+    questionId: string,
+    // Add other fields as needed for update
+    word?: string,
+    wordType?: string,
+    meaning?: string,
+    paragraph?: string,
+    mp4Url?: string,
+    speakingPrompt?: string,
+    writingPrompt?: string
+  }) {
+    const updatedQuestion = await this.questionService.updateByType(body);
+    return ResponseObject.create('Question updated by type', updatedQuestion);
+  }
+
+  @Public()
+  @Delete('delete-by-type')
+  @ApiOperation({ summary: 'Delete a question by type' })
+  async deleteByType(
+    @Query('questionId') questionId: string
+  ) {
+    const result = await this.questionService.deleteByType({ questionId });
+    return ResponseObject.create('Question deleted by type');
+  }
+
+
   @Get(END_POINTS.QUESTION.FIND_BY_SECTION)
   @ApiOperation({ summary: 'Find all questions belong to a section' })
   @ApiParam({ name: 'sectionId', type: 'string' })
