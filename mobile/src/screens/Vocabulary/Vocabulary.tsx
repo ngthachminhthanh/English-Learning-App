@@ -25,7 +25,9 @@ const Vocabulary = () => {
   const [tab, setTab] = useState<"all" | "notLearned">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newVocab, setNewVocab] = useState({ term: "", translation: "" });
-
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editVocab, setEditVocab] = useState<VocabItem | null>(null);
+  const [editVocabData, setEditVocabData] = useState({ term: "", translation: "" });
   const route = useRoute<any>()
   const { sectionID } = route.params || {};
   useEffect(() => {
@@ -50,10 +52,10 @@ const Vocabulary = () => {
 
         if (result.statusCode === 201) {
           setVocabList(result.data.map((item: any, idx: number) => ({
-            id: item.id, 
+            id: item.id,
             term: item.word || "",
             translation: item.meaning || "",
-            checked: false, 
+            checked: false,
             showImage: false
           })));
         } else {
@@ -87,17 +89,42 @@ const Vocabulary = () => {
     navigation.navigate("Notification", { wordList: notLearned });
   };
 
+  const handleEditVocab = async () => {
+    if (!editVocab) return;
+    await questionService.updateQuestion({
+      questionId: editVocab.id,
+      word: editVocabData.term,
+      meaning: editVocabData.translation,
+    });
+    setVocabList(prev =>
+      prev.map(word =>
+        word.id === editVocab.id
+          ? { ...word, term: editVocabData.term, translation: editVocabData.translation }
+          : word
+      )
+    );
+    setShowEditModal(false);
+    setEditVocab(null);
+  };
+
+  const handleDeleteVocab = async (id: number) => {
+    await questionService.deleteQuestion(id );
+    setVocabList(prev => prev.filter(word => word.id !== id));
+  };
   const handleAddVocab = async () => {
-    await questionService.createQuestionForSection({
+    const createdVocab = await questionService.createQuestionForSection({
       type: "VOCAB",
       word: newVocab.term,
       meaning: newVocab.translation,
       sectionId: sectionID
     });
+
+    console.log("createdVocab",createdVocab);
+    
     setVocabList(prev => [
       ...prev,
       {
-        id: prev.length ? prev[prev.length - 1].id + 1 : 1,
+        id: createdVocab.data.id,
         term: newVocab.term,
         translation: newVocab.translation,
         checked: false,
@@ -153,15 +180,33 @@ const Vocabulary = () => {
 
         {/* Vocab list */}
         <ScrollView style={{ marginTop: 30 }}>
-          {vocabList.length>0? vocabList.map(word => (
-            <VocabFrame key={word.id} word={word} onToggle={() => handleToggle(word.id)} />
-          ))
-          :
-          <Text>
-            No vocab
-          </Text>
-        
-        }
+          {vocabList.length > 0 ? vocabList.map(word => (
+            <View key={word.id} style={{ flexDirection: "row", alignItems: "center" }}>
+              <VocabFrame word={word} onToggle={() => handleToggle(word.id)} />
+              {isTeacher && (
+                <>
+                  <TouchableOpacity
+                    style={{ marginLeft: 8, padding: 4 }}
+                    onPress={() => {
+                      setEditVocab(word);
+                      setEditVocabData({ term: word.term, translation: word.translation });
+                      setShowEditModal(true);
+                    }}
+                  >
+                    <Icon name="edit" type="feather" size={20} color="#5D5FEF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ marginLeft: 4, padding: 4 }}
+                    onPress={() => handleDeleteVocab(word.id)}
+                  >
+                    <Icon name="trash-2" type="feather" size={20} color="#FF4D4F" />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )) : (
+            <Text>No vocab</Text>
+          )}
         </ScrollView>
 
         {/* Buttons */}
@@ -225,6 +270,34 @@ const Vocabulary = () => {
               </TouchableOpacity>
               <TouchableOpacity onPress={handleAddVocab} style={styles.addBtn}>
                 <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showEditModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Edit Vocab</Text>
+            <TextInput
+              placeholder="Term (e.g. home(n))"
+              value={editVocabData.term}
+              onChangeText={text => setEditVocabData({ ...editVocabData, term: text })}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Translation"
+              value={editVocabData.translation}
+              onChangeText={text => setEditVocabData({ ...editVocabData, translation: text })}
+              style={styles.input}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+              <TouchableOpacity onPress={() => setShowEditModal(false)} style={styles.cancelBtn}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleEditVocab} style={styles.addBtn}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>

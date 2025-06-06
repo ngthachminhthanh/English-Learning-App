@@ -111,8 +111,8 @@ class Http {
     return this.requestWithRetry("PATCH", endpoint, data);
   }
 
-  async delete(endpoint: string) {
-    return this.requestWithRetry("DELETE", endpoint);
+  async delete(endpoint: string, data?: object) {
+    return this.requestWithRetry("DELETE", endpoint, data);
   }
 
   async setAccessToken(token: string) {

@@ -23,8 +23,11 @@ export default function SpeakingExercise() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState("");
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [questionId, setQuestionId] = useState<string | null>(null);
   const route = useRoute<any>()
-    const { sectionID } = route.params || {};
+  const { sectionID } = route.params || {};
 
   useEffect(() => {
     interface DecodedToken {
@@ -53,6 +56,7 @@ export default function SpeakingExercise() {
 
         if (result.statusCode === 201) {
           setQuestion(result.data[0]?.speakingPrompt);
+          setQuestionId(result.data[0]?.id);
         } else {
           console.error(
             "Error fetching course categories, status code: ",
@@ -84,9 +88,28 @@ export default function SpeakingExercise() {
       "speakingPrompt": newQuestion,
       "sectionId": sectionID
     })
-    setQuestion(newQuestion); 
+    setQuestion(newQuestion);
     setShowAddModal(false);
     setNewQuestion("");
+  };
+
+  const handleEditQuestion = async () => {
+    if (!questionId) return;
+    await questionService.updateQuestion({
+      questionId,
+      speakingPrompt: editQuestion,
+    });
+    setQuestion(editQuestion);
+    setShowEditModal(false);
+  };
+
+  // Delete handler
+  const handleDeleteQuestion = async () => {
+    if (!questionId) return;
+    await questionService.deleteQuestion({ questionId });
+    setQuestion("");
+    setQuestionId(null);
+    setShowEditModal(false);
   };
 
   async function startRecording() {
@@ -226,6 +249,27 @@ export default function SpeakingExercise() {
           <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Question</Text>
         </TouchableOpacity>
       )}
+
+      {isTeacher && questionId && (
+        <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 8 }}>
+          <TouchableOpacity
+            style={{ marginRight: 12, padding: 4 }}
+            onPress={() => {
+              setEditQuestion(question);
+              setShowEditModal(true);
+            }}
+          >
+            <Icon name="edit" size={20} color={colors.blue1} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ padding: 4 }}
+            onPress={handleDeleteQuestion}
+          >
+            <Icon name="trash" size={20} color={colors.pink1} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.card}>
         <Text className='font-sans text-header-2' style={styles.title}>Speaking Exercise</Text>
         <Text className='font-sans text-body' style={styles.question}>{question}</Text>
@@ -330,6 +374,55 @@ export default function SpeakingExercise() {
                 borderRadius: 8,
               }}>
                 <Text style={{ color: "#fff", fontWeight: "bold" }}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showEditModal} transparent animationType="fade">
+        <View style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.3)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}>
+          <View style={{
+            backgroundColor: "#fff",
+            padding: 20,
+            borderRadius: 10,
+            width: "90%",
+          }}>
+            <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Edit Speaking Question</Text>
+            <TextInput
+              placeholder="Enter speaking question"
+              value={editQuestion}
+              onChangeText={setEditQuestion}
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                borderRadius: 8,
+                padding: 10,
+                marginBottom: 10,
+              }}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 10 }}>
+              <TouchableOpacity onPress={() => setShowEditModal(false)} style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: "#eee",
+                borderRadius: 8,
+                marginRight: 8,
+              }}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleEditQuestion} style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                backgroundColor: colors.blue1,
+                borderRadius: 8,
+              }}>
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>

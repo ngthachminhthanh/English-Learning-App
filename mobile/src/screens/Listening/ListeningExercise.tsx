@@ -6,30 +6,27 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  Image,
-  Dimensions,
   Modal,
   TextInput
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Audio } from 'expo-av'; // Import Audio from expo-av
+import { Audio } from 'expo-av';
 import BottomNavigation from '../../components/QuestionNavigation';
 import colors from '../../../colors';
 import Section from "../../models/Section";
 import sectionService from "../../services/section.service";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../type";
-import SelectionFormat from "../../components/SelectionFormat/SelectionFormat";
 import { useFocusEffect } from '@react-navigation/native';
 import { Button } from 'react-native-paper';
 import { Input } from 'react-native-elements';
-import HtmlReader from '../../components/HtmlReader';
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import questionService from '../../services/question.service';
 import * as DocumentPicker from 'expo-document-picker';
 import { uploadFile } from '../../utils/upload.util';
+
 const CONTENT_HEIGHT = 400;
 const BOTTOM_NAV_HEIGHT = 80;
 
@@ -39,7 +36,7 @@ type ListeningExerciseProps = {
 
 export default function ListeningExerciseScreen() {
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0); // Initialize duration state
+  const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<string[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(1);
@@ -49,38 +46,42 @@ export default function ListeningExerciseScreen() {
   const route = useRoute<RouteProp<RootStackParamList, "Reading">>();
   const { sectionID } = route.params;
   const [section, setSection] = useState<Section | null>(null);
-  const { width } = Dimensions.get("window");
-  const questionGroups = section ? section.questionGroups : [];
-  const [isTeacher, setIsTeacher] = useState<boolean>()
+  const [isTeacher, setIsTeacher] = useState<boolean>();
   const [showAddModal, setShowAddModal] = useState(false);
   const [audioUrl, setAudioUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<any>(null);
-  const [fileUrl, setFileUrl] = useState<string>("")
+  const [fileUrl, setFileUrl] = useState<string>("");
   const [selectedFileUrl, setSelectedFileUrl] = useState<any>(null);
   const [mcqText, setMcqText] = useState('');
   const [mcqChoices, setMcqChoices] = useState(['', '', '', '']);
   const [mcqCorrect, setMcqCorrect] = useState<number | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<{ [questionId: string]: number }>({});
 
+  // MCQ Edit Modal State
+  const [showEditMcqModal, setShowEditMcqModal] = useState(false);
+  const [editMcqId, setEditMcqId] = useState<string | null>(null);
+  const [editMcqText, setEditMcqText] = useState('');
+  const [editMcqChoices, setEditMcqChoices] = useState(['', '', '', '']);
+  const [editMcqCorrect, setEditMcqCorrect] = useState<number | null>(null);
+
   const handleAddMcq = async () => {
     if (!mcqText.trim() || mcqChoices.some(c => !c.trim()) || mcqCorrect === null) {
       console.log('Please fill all fields and select the correct answer.');
-
       return;
     }
     try {
-      await questionService.createQuestionForSection({
+      const res = await questionService.createQuestionForSection({
         type: "MULTIPLE_CHOICE",
         sectionId: sectionID,
         question: mcqText,
         choices: mcqChoices,
         answer: mcqChoices[mcqCorrect]
       });
-
+      const realId = res.data?.id
       setQuestions(prev => [
         ...prev,
         {
-          id: Math.random().toString(), // Temporary local id
+          id: realId,
           text: mcqText,
           options: mcqChoices,
           answered: false,
@@ -90,58 +91,69 @@ export default function ListeningExerciseScreen() {
       setMcqText('');
       setMcqChoices(['', '', '', '']);
       setMcqCorrect(null);
-
-      // Optionally refresh questions here
     } catch (err) {
       console.log(err);
-
     }
+  };
+
+  // MCQ Edit/Remove
+  const handleEditMcq = async () => {
+    if ( editMcqCorrect === null) return;
+    try {
+      await questionService.updateQuestion({
+        questionId: editMcqId,
+        text: editMcqText,
+        choices: editMcqChoices,
+        answer: editMcqChoices[editMcqCorrect]
+      });
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === editMcqId
+            ? { ...q, text: editMcqText, options: editMcqChoices }
+            : q
+        )
+      );
+      setShowEditMcqModal(false); // Always close modal after update
+    } catch (err) {
+      console.log(err);
+      // Optionally show error to user
+      setShowEditMcqModal(false); // Still close modal on error
+    }
+  };
+
+  const handleDeleteMcq = async (questionId: string) => {
+    await questionService.deleteQuestion(questionId);
+    setQuestions(prev => prev.filter(q => q.id !== questionId));
   };
 
   const pickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'audio/*', // Only allow audio files
+        type: 'audio/*',
         copyToCacheDirectory: true,
         multiple: false,
       });
       if (result.assets && result.assets.length > 0) {
         setSelectedFile(result.assets[0]);
-        setSelectedFileUrl(result.assets[0].uri)
-        // Convert DocumentPickerAsset to Blob
+        setSelectedFileUrl(result.assets[0].uri);
         const asset = result.assets[0];
         if (asset && asset.uri) {
           const response = await fetch(asset.uri);
           const blob = await response.blob();
-          // Create a File-like object if needed
           const file = new File([blob], asset.name || "audio", { type: asset.mimeType || blob.type });
           const key = await uploadFile(file, "listening file");
-          console.log("key", key);
-          console.log("file ", `https://d1fc7d6en42vzg.cloudfront.net/${key}`);
-          setFileUrl(`https://d1fc7d6en42vzg.cloudfront.net/${key}`)
+          setFileUrl(`https://d1fc7d6en42vzg.cloudfront.net/${key}`);
           await questionService.createQuestionForSection({
             "type": "LISTENING",
             "mp4Url": `https://d1fc7d6en42vzg.cloudfront.net/${key}`,
             "sectionId": sectionID
-          })
+          });
         }
-        // You can upload the file here or later
       }
     } catch (err) {
       console.log('File pick error:', err);
     }
   };
-
-
-  // const handleAddQuestion = async () => {
-  //   await questionService.createQuestionForSection({
-  //     "type": "WRITING_QUESTION",
-  //     "writingPrompt": newQuestion,
-  //     "sectionId": sectionID
-  //   })
-  //   setNewQuestion(newQuestion);
-  //   setShowAddModal(false);
-  // };
 
   useEffect(() => {
     interface DecodedToken {
@@ -151,33 +163,21 @@ export default function ListeningExerciseScreen() {
     }
 
     const decodeTokenAndFetch = async () => {
-      // 1. Decode token and set isTeacher
       const token = await SecureStore.getItemAsync("accessToken");
       const decoded = jwtDecode<DecodedToken>(token || "");
       const groups = decoded["cognito:groups"];
-      const username = decoded["username"]
-
       setIsTeacher(groups?.includes("TEACHER"));
-      console.log(decoded);
-      console.log(groups?.includes("TEACHER"));
 
       try {
         const result = await questionService.getQuestionBySection({
           "sectionId": sectionID,
           "type": "LISTENING"
         });
-        console.log("result", result);
-
         if (result.statusCode === 201) {
-          setAudioUrl(result.data[0]?.writtingPrompt);
-        } else {
-          console.error(
-            "Error fetching course categories, status code: ",
-            result.statusCode
-          );
+          setAudioUrl(result.data[0]?.mp4Url || result.data[0]?.writtingPrompt);
         }
       } catch (error) {
-        console.error("Error fetching course categories:", error);
+        console.error("Error fetching listening audio:", error);
       }
 
       try {
@@ -185,11 +185,8 @@ export default function ListeningExerciseScreen() {
           "sectionId": sectionID,
           "type": "MULTIPLE_CHOICE"
         });
-        console.log("choices", result.data[0].choices)
-
         if (result.statusCode === 201) {
-          setQuestions(prev => [
-            ...prev,
+          setQuestions([
             ...result.data.map((q: any) => ({
               id: q.id || Math.random().toString(),
               text: q.text,
@@ -197,69 +194,57 @@ export default function ListeningExerciseScreen() {
               answered: false,
             }))
           ]);
-        } else {
-          console.error(
-            "Error fetching course categories, status code: ",
-            result.statusCode
-          );
         }
       } catch (error) {
-        console.error("Error fetching course categories:", error);
+        console.error("Error fetching MCQ:", error);
       }
-      // 2. Fetch course categories
-
     }
     decodeTokenAndFetch();
   }, []);
 
+  // useEffect(() => {
+  //   const fetchSection = async () => {
+  //     try {
+  //       const response = await sectionService.getSectionById(sectionID);
+  //       setSection(response.data);
+  //       if (response.data.questionGroups) {
+  //         const allQuestions = response.data.questionGroups.flatMap((group: any) =>
+  //           group.questions.map((q: any) => ({
+  //             id: q.id,
+  //             text: q.text,
+  //             options: q.options,
+  //             answered: false
+  //           }))
+  //         );
+  //         setQuestions(allQuestions);
+  //       }
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
 
-  useEffect(() => {
-    const fetchSection = async () => {
-      try {
-        const response = await sectionService.getSectionById(sectionID);
-        setSection(response.data);
-        if (response.data.questionGroups) {
-          const allQuestions = response.data.questionGroups.flatMap((group: any) =>
-            group.questions.map((q: any) => ({
-              id: q.id,
-              text: q.text,
-              options: q.options,
-              answered: false
-            }))
-          );
-          setQuestions(allQuestions);
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-    fetchSection();
-  }, [sectionID]);
+  //   fetchSection();
+  // }, [sectionID]);
 
   useEffect(() => {
     const loadAudio = async () => {
       if (audioUrl) {
-        console.log("audioUrl", audioUrl);
-
         const { sound } = await Audio.Sound.createAsync(
           { uri: audioUrl },
           { shouldPlay: false }
         );
         setSound(sound);
 
-        // Fetch and set the duration of the audio
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
           if (status.durationMillis !== undefined) {
-            setDuration(status.durationMillis / 1000); // Convert milliseconds to seconds
+            setDuration(status.durationMillis / 1000);
           }
         }
 
-        // Update currentTime as the audio plays
         sound.setOnPlaybackStatusUpdate((status) => {
           if (status.isLoaded && status.positionMillis !== undefined) {
-            setCurrentTime(status.positionMillis / 1000); // Convert milliseconds to seconds
+            setCurrentTime(status.positionMillis / 1000);
           }
         });
       }
@@ -272,7 +257,7 @@ export default function ListeningExerciseScreen() {
         sound.unloadAsync();
       }
     };
-  }, [section]);
+  }, [audioUrl]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -290,24 +275,8 @@ export default function ListeningExerciseScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const estimateContentHeight = (content: string) => {
-    const CHAR_HEIGHT = 0.5; // Estimate height per character
-    return content.length * CHAR_HEIGHT;
-  };
-
-  const estimateQuestionGroupHeight = (questionGroup: any) => {
-    const CHAR_HEIGHT = 0.5; // Estimate height per character
-    return questionGroup.text.length * CHAR_HEIGHT;
-  };
-
   const handleQuestionChange = (questionIndex: number) => {
     setCurrentQuestion(questionIndex + 1);
-    const contentHeight = section ? estimateContentHeight(section.content) : 0;
-    const questionGroupHeight = section ? estimateQuestionGroupHeight(section.questionGroups[0]) : 0;
-    scrollViewRef.current?.scrollTo({
-      y: questionIndex * 150 + contentHeight + questionGroupHeight, // Adjust the scroll position as needed
-      animated: true,
-    });
   };
 
   const handlePlayPause = async () => {
@@ -334,10 +303,8 @@ export default function ListeningExerciseScreen() {
     }
   };
 
-
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.audioPlayer}>
         {isTeacher && (
           <>
@@ -498,6 +465,28 @@ export default function ListeningExerciseScreen() {
                 <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10, color: colors.blue1 }}>
                   {idx + 1}. {question.text}
                 </Text>
+                {isTeacher && (
+                  <View style={{ flexDirection: "row", marginBottom: 8 }}>
+                    <TouchableOpacity
+                      style={{ marginRight: 12, padding: 4 }}
+                      onPress={() => {
+                        setEditMcqId(question.id);
+                        setEditMcqText(question.text);
+                        setEditMcqChoices([...question.options]);
+                        setEditMcqCorrect(null);
+                        setShowEditMcqModal(true);
+                      }}
+                    >
+                      <Text style={{ color: colors.blue1, fontWeight: "bold" }}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ padding: 4 }}
+                      onPress={() => handleDeleteMcq(question.id)}
+                    >
+                      <Text style={{ color: colors.pink1, fontWeight: "bold" }}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
                 {question.options && question.options.length > 0 ? (
                   question.options.map((option, oidx) => (
                     <TouchableOpacity
@@ -576,20 +565,77 @@ export default function ListeningExerciseScreen() {
           )}
         </View>
 
-        {
-          !isTeacher && (
-            <>
-              <TouchableOpacity
-                onPress={() => { }}
-                style={styles.submitButton}
-              >
-                <Text style={styles.submitButtonText}>Submit</Text>
-              </TouchableOpacity>
-            </>
-          )
-        }
+        {!isTeacher && (
+          <TouchableOpacity
+            onPress={() => { }}
+            style={styles.submitButton}
+          >
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        )}
 
-
+        {/* Edit Modal for MCQ */}
+        <Modal visible={showEditMcqModal} transparent animationType="fade">
+          <View style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}>
+            <View style={{
+              backgroundColor: "#fff",
+              padding: 20,
+              borderRadius: 10,
+              width: "90%",
+            }}>
+              <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>Edit Multiple Choice Question</Text>
+              <TextInput
+                placeholder="Edit question text"
+                value={editMcqText}
+                onChangeText={setEditMcqText}
+                style={{
+                  borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 8, padding: 8
+                }}
+              />
+              {editMcqChoices.map((choice, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                  <TouchableOpacity
+                    style={{
+                      width: 20, height: 20, borderRadius: 10, borderWidth: 1,
+                      borderColor: editMcqCorrect === idx ? colors.blue1 : '#ccc',
+                      backgroundColor: editMcqCorrect === idx ? colors.blue1 : '#fff',
+                      marginRight: 8,
+                      justifyContent: 'center', alignItems: 'center'
+                    }}
+                    onPress={() => setEditMcqCorrect(idx)}
+                  >
+                    {editMcqCorrect === idx && <View style={{
+                      width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff'
+                    }} />}
+                  </TouchableOpacity>
+                  <TextInput
+                    placeholder={`Choice ${idx + 1}`}
+                    value={choice}
+                    onChangeText={text => {
+                      const newChoices = [...editMcqChoices];
+                      newChoices[idx] = text;
+                      setEditMcqChoices(newChoices);
+                    }}
+                    style={{
+                      flex: 1,
+                      borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8
+                    }}
+                  />
+                </View>
+              ))}
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12 }}>
+                <Button onPress={() => setShowEditMcqModal(false)} style={{ marginRight: 8 }}>Cancel</Button>
+                <Button mode="contained" onPress={handleEditMcq}>Save</Button>
+                <Button mode="contained" color={colors.pink1} onPress={() => handleDeleteMcq(editMcqId!)} style={{ marginLeft: 8 }}>Delete</Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
 
       <BottomNavigation
@@ -597,7 +643,6 @@ export default function ListeningExerciseScreen() {
         answeredQuestions={answeredQuestions}
         currentQuestion={currentQuestion}
         onQuestionChange={handleQuestionChange}
-
       />
     </SafeAreaView>
   );
@@ -619,7 +664,7 @@ const styles = StyleSheet.create({
   },
   readingContent: {
     flex: 1,
-    alignItems: 'flex-start', // Changed to flex-start for better text alignment
+    alignItems: 'flex-start',
     marginVertical: 10,
     paddingHorizontal: 16,
     width: '100%'

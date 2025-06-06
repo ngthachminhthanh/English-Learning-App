@@ -127,11 +127,12 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
 
   const handleCreateSection = async () => {
     if (!sectionLessonId) return;
-    await sectionService.createSection({
+    const res = await sectionService.createSection({
       lessonId: sectionLessonId,
       title: newSection.title,
       type: newSection.type,
     });
+    const sectionId = res?.data?.id; 
     setLessons(prev =>
       prev.map(lesson =>
         lesson.id === sectionLessonId
@@ -140,7 +141,7 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
             sections: [
               ...lesson.sections,
               {
-                id: `sec${lesson.sections.length + 1}`,
+                id: sectionId,
                 title: newSection.title,
                 type: newSection.type,
               },

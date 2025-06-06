@@ -16,6 +16,13 @@ class QuestionService {
   async getQuestionBySection(data: any) {
     return await http.post(this.getURI("get-by-type"), data)
   }
+
+  async updateQuestion(data: any) {
+    return await http.put(this.getURI("update-by-type"), data)
+  }
+  async deleteQuestion(data: any) {
+    return await http.delete(this.getURI(`delete-by-type?questionId=${data}`))
+  }
 }
 const questionService = new QuestionService();
 export default questionService;
