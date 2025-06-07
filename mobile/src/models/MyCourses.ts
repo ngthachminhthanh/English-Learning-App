@@ -1,15 +1,15 @@
 type MyCourse = {
     id: string;
     title: string;
-    description: string;
+    description?: string;
     thumbnail_image: string;
     ratingCount: number;
-    ratingAverage: number;
+    ratingAverage?: number;
     teacherName: string;
-    createdAt: string;
-    updatedAt: string;
-    categoryName: string;
-    progress: number;
+    createdAt?: string;
+    updatedAt?: string;
+    categoryName?: string;
+    progress?: number;
   };
   export default MyCourse;
   
