@@ -1,42 +1,47 @@
+import * as FileSystem from 'expo-file-system';
+import { decode as atob } from 'base-64'
 import axios from 'axios';
 
 async function getPresignedUrl(extension: string, contentType: string) {
-    console.log("extension", extension);
-    console.log("contentType", contentType);
-
-    const response = await axios.get(`https://e1eb-2402-9d80-a50-5f9e-f82f-5689-4b55-617e.ngrok-free.app/api/file/presigned-url?contentType=${contentType}&extension=${extension}`);
-
-    console.log("url", response.data)
-    return response.data; // { preSignedUrl, key }
+    const response = await axios.get(
+        `https://f484-2402-9d80-a50-28b-a80f-1e5-e3ce-b43c.ngrok-free.app/api/file/presigned-url?contentType=${contentType}&extension=${extension}`
+    );
+    return response.data.data; // { preSignedUrl, key }
 }
 
-async function uploadFileToS3(preSignedUrl: string, file: File) {
-    console.log("file.type", file.type);
-    console.log("preSignedUrl", preSignedUrl);
-    const response = await axios.put(preSignedUrl, file, {
-        headers: {
-            'Content-Type': file.type,
-        },
+function base64ToUint8Array(base64: string): Uint8Array {
+    const binary_string = atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+}
 
-        withCredentials: false
+async function uploadFileToS3(preSignedUrl: string, uri: string, mimeType: string) {
+    const fileBase64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+    });
+    const fileBytes = base64ToUint8Array(fileBase64);
+    const response = await fetch(preSignedUrl, {
+        method: "PUT",
+        headers: {
+            "Content-Type": mimeType,
+        },
+        body: fileBytes,
     });
     if (response.status !== 200 && response.status !== 204) {
         throw new Error('Failed to upload file to S3');
     }
 }
 
-
-export async function uploadFile(file: File, description: string) {
+export async function uploadFile(uri: string, fileName: string, mimeType: string, description: string) {
     try {
-        const response = await getPresignedUrl(file.name.split('.').pop() || '', file.type);
-        const key= response.data.key
-        const preSignedUrl = response.data.preSignedUrl
-
-        console.log("key", key);
-
-        console.log("preSignedUrl", preSignedUrl)
-        await uploadFileToS3(preSignedUrl, file);
-        // await notifyBackendFileUploaded( key, description);
+        const response = await getPresignedUrl(fileName.split('.').pop() || '', mimeType);
+        const key = response.key;
+        const preSignedUrl = response.preSignedUrl;
+        await uploadFileToS3(preSignedUrl, uri, mimeType);
         return key;
     } catch (error) {
         console.error('Upload file failed:', error);

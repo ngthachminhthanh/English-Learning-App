@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
-  TextInput
+  TextInput,
+  Alert
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -26,6 +27,8 @@ import * as SecureStore from "expo-secure-store";
 import questionService from '../../services/question.service';
 import * as DocumentPicker from 'expo-document-picker';
 import { uploadFile } from '../../utils/upload.util';
+import * as FileSystem from 'expo-file-system';
+
 
 const CONTENT_HEIGHT = 400;
 const BOTTOM_NAV_HEIGHT = 80;
@@ -98,7 +101,7 @@ export default function ListeningExerciseScreen() {
 
   // MCQ Edit/Remove
   const handleEditMcq = async () => {
-    if ( editMcqCorrect === null) return;
+    if (editMcqCorrect === null) return;
     try {
       await questionService.updateQuestion({
         questionId: editMcqId,
@@ -128,32 +131,139 @@ export default function ListeningExerciseScreen() {
 
   const pickFile = async () => {
     try {
+
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'audio/*',
+        type: ['audio/*'],
         copyToCacheDirectory: true,
         multiple: false,
       });
+
       if (result.assets && result.assets.length > 0) {
-        setSelectedFile(result.assets[0]);
-        setSelectedFileUrl(result.assets[0].uri);
         const asset = result.assets[0];
+        setSelectedFileUrl(asset.uri);
+        console.log('uri:', asset.uri);
+
         if (asset && asset.uri) {
-          const response = await fetch(asset.uri);
-          const blob = await response.blob();
-          const file = new File([blob], asset.name || "audio", { type: asset.mimeType || blob.type });
-          const key = await uploadFile(file, "listening file");
-          setFileUrl(`https://d1fc7d6en42vzg.cloudfront.net/${key}`);
+          // Get file info
+          const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+          console.log('File info:', fileInfo);
+          if (!fileInfo.exists || fileInfo.size === 0) {
+            throw new Error('File does not exist or is empty');
+          }
+          if (fileInfo.size < 1000) {
+            throw new Error(`File size too small (${fileInfo.size} bytes), likely corrupted`);
+          }
+
+          // Validate MIME type
+          const extension = asset.name?.split('.').pop()?.toLowerCase() || '';
+          const contentTypeMap = {
+            m4a: 'audio/mp4',
+            mp3: 'audio/mpeg',
+            wav: 'audio/wav',
+          };
+          const mimeType =
+            (extension in contentTypeMap
+              ? contentTypeMap[extension as keyof typeof contentTypeMap]
+              : undefined) ||
+            asset.mimeType ||
+            'application/octet-stream';
+          if (!mimeType.startsWith('audio/')) {
+            throw new Error(`Invalid MIME type: ${mimeType}`);
+          }
+
+          // Validate JPEG header (for JPEG files)
+          if (mimeType === 'image/jpeg') {
+            const fileContent = await FileSystem.readAsStringAsync(asset.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+              length: 2,
+            });
+            // Decode base64 to binary
+            const binaryString = atob(fileContent);
+            const bytes = new Uint8Array(binaryString.split('').map((c) => c.charCodeAt(0)));
+            if (bytes[0] !== 0xFF || bytes[1] !== 0xD8) {
+              throw new Error('Invalid JPEG file: Missing SOI marker');
+            }
+            console.log('JPEG header validated successfully');
+          }
+
+          const key = await uploadFile(asset.uri, asset.name || 'image.jpg', mimeType, 'profile image file');
+          const cloudfrontUrl = `https://d1fc7d6en42vzg.cloudfront.net/${key}`;
+          console.log("key", key);
           await questionService.createQuestionForSection({
             "type": "LISTENING",
             "mp4Url": `https://d1fc7d6en42vzg.cloudfront.net/${key}`,
             "sectionId": sectionID
           });
+          setFileUrl(cloudfrontUrl);
+          setAudioUrl(cloudfrontUrl);
+
+          // Read file content as Base64
+          const fileContent = await FileSystem.readAsStringAsync(asset.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const byteArray = Uint8Array.from(atob(fileContent), (c) => c.charCodeAt(0));
+          const blob = new Blob([byteArray], { type: mimeType });
+          console.log('Blob size:', blob.size, 'File size:', fileInfo.size);
+          if (blob.size !== fileInfo.size) {
+            throw new Error(`Blob size (${blob.size} bytes) does not match file size (${fileInfo.size} bytes)`);
+          }
+
+          // Create File object
+          // const file = new File([blob], asset.name || 'image', { type: mimeType });
+
+          // // Save File to local storage for inspection
+          // const localPath = `${FileSystem.documentDirectory}${asset.name || 'image.jpg'}`;
+          // await FileSystem.writeAsStringAsync(localPath, fileContent, {
+          //   encoding: FileSystem.EncodingType.Base64,
+          // });
+          // console.log('File saved locally:', localPath);
+          // Alert.alert('File saved', `Saved to: ${localPath}`);
+
+          // Set image as valid for rendering
+
+
+          // Proceed with upload
+
+          Alert.alert('Image uploaded successfully');
+          Alert.alert('Image uploaded successfully');
         }
+      } else {
+        Alert.alert('No file selected');
       }
     } catch (err) {
-      console.log('File pick error:', err);
+      console.error('File pick or validation error:', err);
+
     }
   };
+
+  // const pickFile = async () => {
+  //   try {
+  //     const result = await DocumentPicker.getDocumentAsync({
+  //       type: 'audio/*',
+  //       copyToCacheDirectory: true,
+  //       multiple: false,
+  //     });
+  //     if (result.assets && result.assets.length > 0) {
+  //       setSelectedFile(result.assets[0]);
+  //       setSelectedFileUrl(result.assets[0].uri);
+  //       const asset = result.assets[0];
+  //       if (asset && asset.uri) {
+  //         const response = await fetch(asset.uri);
+  //         const blob = await response.blob();
+  //         const file = new File([blob], asset.name || "audio", { type: asset.mimeType || blob.type });
+  //         const key = await uploadFile(file, "listening file");
+  //         setFileUrl(`https://d1fc7d6en42vzg.cloudfront.net/${key}`);
+  //         await questionService.createQuestionForSection({
+  //           "type": "LISTENING",
+  //           "mp4Url": `https://d1fc7d6en42vzg.cloudfront.net/${key}`,
+  //           "sectionId": sectionID
+  //         });
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.log('File pick error:', err);
+  //   }
+  // };
 
   useEffect(() => {
     interface DecodedToken {
@@ -317,7 +427,7 @@ export default function ListeningExerciseScreen() {
                 alignSelf: "center",
                 marginBottom: 16,
               }}
-              onPress={pickFile}
+            onPress={pickFile}
             >
               <Text style={{ color: "#fff", fontWeight: "bold" }}>Pick Audio File</Text>
             </TouchableOpacity>

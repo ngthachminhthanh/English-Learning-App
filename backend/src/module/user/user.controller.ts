@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UserService } from './user.service';
 
 import { User } from '../../common/decorators/user.decorator';
@@ -37,6 +37,26 @@ export class UserController {
   async deleteUser(@Param('id') id: string) {
     await this.userService.deleteUser(id);
     return ResponseObject.create('User deleted');
+  }
+
+  @Put("update")
+  @ApiOperation({ summary: 'Update user information' })
+  async updateUser(
+    @User() user: IUser,
+    @Body() body: {
+      firstName?: string,
+      lastName?: string,
+      email?: string,
+      phone?: string,
+      avatarURL?: string
+    }
+  ) {
+    const res = await this.userService.updateByType({
+      awsId: user.userAwsId,
+      ...body
+    });
+
+    return ResponseObject.create('User retrieved', res);
   }
 
 

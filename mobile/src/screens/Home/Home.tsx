@@ -55,7 +55,7 @@ const Home = () => {
       try {
         const result = await courseCategoryService.getCourseCategories();
         console.log("result", result);
-        
+
         if (result.statusCode === 200) {
           setCourseCategories(result.data);
         } else {
@@ -99,16 +99,12 @@ const Home = () => {
         className="flex flex-col gap-4 pb-20"
       >
         <View className="welcome-container w-3/4 flex flex-row items-center gap-1">
-          <Image
-            source={require("../../../assets/avatar.png")}
-            className="w-12 h-12 p-1 border border-pink1 rounded-full"
-          />
           <View className="flex flex-col">
             <Text className="text-xl font-bold text-black">
               Welcome back,{" "}
               <Text className="text-xl font-bold text-blue1">{userName}!</Text>
             </Text>
-            <Text className="text-lg text-black">Let’s start learning</Text>
+            <Text className="text-lg text-black">{isTeacher ? "Let's start teaching" : "Let's start learning"}</Text>
           </View>
         </View>
         <ScrollView

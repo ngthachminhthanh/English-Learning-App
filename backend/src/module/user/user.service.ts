@@ -38,6 +38,27 @@ export class UserService {
     return user;
   }
 
+  async updateByType(body: {
+      awsId: string,
+      firstName?: string,
+      lastName?: string,
+      email?: string,
+      phone?: string,
+      avatarURL?: string
+    }) {
+      const { awsId, ...updateFields } = body;
+      // Remove undefined fields
+      Object.keys(updateFields).forEach(
+        (key) => updateFields[key] === undefined && delete updateFields[key]
+      );
+      
+      await this.dataSource.getRepository(User).update(
+        { awsCognitoId: awsId },
+        updateFields
+      );
+      return this.dataSource.getRepository(User).findOne({ where: { awsCognitoId: awsId  } });
+    }
+  
   async findAll(): Promise<User[]> {
     return this.dataSource.getRepository(User).find();
   }
