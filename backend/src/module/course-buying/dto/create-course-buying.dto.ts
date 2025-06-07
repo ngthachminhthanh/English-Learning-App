@@ -9,7 +9,7 @@ export class CreateCourseBuyingDto {
   @ApiProperty({
     description: 'Course id',
     type: String,
-    example: 'd1911740-84e0-4778-9c0d-4465dcb1d13e',
+    example: '4922bbb6-5c5f-4a3b-ba22-a52d75f14de3',
   })
   courseId: string;
   @IsEnum(PAYMENT_METHOD)

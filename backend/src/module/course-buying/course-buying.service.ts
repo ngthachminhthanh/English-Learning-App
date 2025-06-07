@@ -85,22 +85,26 @@ import {
         const now = new Date();
         const vnpCreateDate = formatDateToVnpCreateDate(now);
         const vnpIpAddr =
-          req.headers['x-forwarded-for'] ||
+          (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
           req.connection.remoteAddress ||
           req.socket.remoteAddress;
         // const vnpIpAddr = this.config.get<string>('ipAddress');
         const vnpAmount = courseBuying.course.price;
-        const vnpOrderInfo = 'Thanh toán khóa học ' + courseBuying.course.title;
-        const vnpTxnRef = orderId;
-  
+        const vnpOrderInfo = 'Thanh toan khoa hoc ' + courseBuying.course.title;
+        
+        // FIX: Tạo vnpTxnRef unique với timestamp
+        const timestamp = Date.now().toString();
+        const shortOrderId = orderId.replace(/-/g, '').substring(0, 16);
+        const vnpTxnRef = 'COURSE' + shortOrderId + timestamp.slice(-10); // 6 + 16 + 10 = 32 ký tự
+    
         const gmt7Offset = 7 * 60;
         const localOffset = now.getTimezoneOffset();
         const gmt7Time = new Date(
           now.getTime() + (gmt7Offset + localOffset) * 60 * 1000,
         );
-  
+    
         gmt7Time.setMinutes(gmt7Time.getMinutes() + 15);
-  
+    
         const vnpExpireDate = formatDateToVnpCreateDate(gmt7Time);
         let vnp_Params = {};
         vnp_Params['vnp_Version'] = '2.1.0';
@@ -118,13 +122,13 @@ import {
         vnp_Params['vnp_OrderType'] = 'other';
         vnp_Params['vnp_ExpireDate'] = vnpExpireDate;
         vnp_Params = sortObject(vnp_Params);
-        const signData: string = qs.stringify(vnp_Params);
+        const signData: string = qs.stringify(vnp_Params, { encode: false });
         const hmac = crypto.createHmac('sha512', vnpHashSecret);
         const signed: string = hmac
           .update(Buffer.from(signData, 'utf-8'))
           .digest('hex');
         vnp_Params['vnp_SecureHash'] = signed;
-        vnpUrl += '?' + qs.stringify(vnp_Params);
+        vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
         return vnpUrl;
       } catch (error) {
         console.log(error);
@@ -145,7 +149,7 @@ import {
       const vnpHashSecret = this.config.get<string>('vnpHashSecret');
       const signData = qs.stringify(vnp_Params, { encode: false });
       const hmac = crypto.createHmac('sha512', vnpHashSecret);
-      const signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
+      const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
   
       const paymentStatus = '0';
       let checkOrderId = true;
@@ -160,7 +164,7 @@ import {
         checkOrderId = false;
       }
       const checkAmount =
-        order.course.price === vnp_Params['vnp_Amout'] / 100 ? true : false; // Kiểm tra số tiền "giá trị của vnp_Amout/100" trùng khớp với số tiền của đơn hàng trong CSDL của bạn
+        order.course.price === vnp_Params['vnp_Amount'] / 100 ? true : false; // Kiểm tra số tiền "giá trị của vnp_Amout/100" trùng khớp với số tiền của đơn hàng trong CSDL của bạn
       if (secureHash === signed) {
         if (checkOrderId) {
           if (checkAmount) {
@@ -199,7 +203,7 @@ import {
       const vnpHashSecret = this.config.get<string>('vnpHashSecret');
       const signData = qs.stringify(vnp_Params, { encode: false });
       const hmac = crypto.createHmac('sha512', vnpHashSecret);
-      const signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
+      const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
       const courseBuying = await this.dataSource
         .getRepository(CourseBuying)
         .findOne({
