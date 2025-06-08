@@ -220,9 +220,9 @@ export default function ReadingExercise({ scrollRef }: ReadingExerciseProps) {
     fetchSection();
   }, [sectionID]);
 
-  if (!section) {
-    return <ActivityIndicator size={"large"} />
-  }
+  // if (!section) {
+  //   return <ActivityIndicator size={"large"} />
+  // }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -271,7 +271,7 @@ export default function ReadingExercise({ scrollRef }: ReadingExerciseProps) {
           {isTeacher ? (
             <Text>{newQuestion}</Text>
           ) : (
-            section.content && <HtmlReader html={section.content} />
+            section?.content && <HtmlReader html={section.content} />
           )}
         </View>
 

@@ -15,7 +15,7 @@ export class Section extends Base {
 
   @Column({ nullable: true })
   @AutoMap()
-  content?: string;
+  content: string;
 
   @Column({
     type: 'enum',

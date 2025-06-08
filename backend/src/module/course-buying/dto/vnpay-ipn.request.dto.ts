@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsAlphanumeric,
+  Length,
+} from 'class-validator';
 
 export class VnpayIPNRequest {
   @IsNumber()
@@ -92,14 +99,16 @@ export class VnpayIPNRequest {
   })
   vnpTransactionStatus: string;
 
-  @IsNumber()
+  @IsString()
+  @IsAlphanumeric()
+  @Length(1, 100)
   @IsNotEmpty()
   @ApiProperty({
-    type: Number,
-    description: 'vnp_TxnRef',
-    example: 10000,
+    type: String,
+    description: 'Mã tham chiếu giao dịch (chữ + số)',
+    example: 'COURSE4922bbb65c5f4a3b1733652930',
   })
-  vnp_TxnRef: number;
+  vnp_TxnRef: string;
 
   @IsString()
   @IsNotEmpty()

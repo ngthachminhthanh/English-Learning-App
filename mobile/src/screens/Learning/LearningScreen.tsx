@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { Button } from "react-native-elements";
 import CourseItem from "../../components/CourseItem";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -231,30 +231,48 @@ export default function LearningScreen() {
               padding: 20,
               borderRadius: 10,
               elevation: 10,
-              zIndex: 100,
+              zIndex: 1000, // Ensure popup is above other elements
             }}
           >
             <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 10 }}>
               Create New Course
             </Text>
-            <ScrollView>
+            <View style={{ zIndex: 2000 }}>
               <TextInput
                 placeholder="Title"
                 value={newCourse.title}
-                onChangeText={text => setNewCourse({ ...newCourse, title: text })}
-                style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 }}
+                onChangeText={(text) => setNewCourse({ ...newCourse, title: text })}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
               />
               <TextInput
                 placeholder="Description"
                 value={newCourse.description}
-                onChangeText={text => setNewCourse({ ...newCourse, description: text })}
-                style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 }}
+                onChangeText={(text) => setNewCourse({ ...newCourse, description: text })}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
               />
               <TextInput
                 placeholder="Thumbnail Image URL"
                 value={newCourse.thumbnail_image}
-                onChangeText={text => setNewCourse({ ...newCourse, thumbnail_image: text })}
-                style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 }}
+                onChangeText={(text) => setNewCourse({ ...newCourse, thumbnail_image: text })}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
               />
               <DropDownPicker
                 open={open}
@@ -264,16 +282,35 @@ export default function LearningScreen() {
                 setValue={setValue}
                 setItems={setItems}
                 placeholder="Select category..."
-                onChangeValue={val => setNewCourse({ ...newCourse, categoryId: val ? String(val) : "" })}
+                onChangeValue={(val) => setNewCourse({ ...newCourse, categoryId: val ? String(val) : "" })}
+                zIndex={3000}
+                zIndexInverse={2000}
+                dropDownContainerStyle={{
+                  borderColor: "#ccc",
+                  zIndex: 3000,
+                }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
               />
               <TextInput
                 placeholder="Price"
                 value={newCourse.price}
-                onChangeText={text => setNewCourse({ ...newCourse, price: text })}
+                onChangeText={(text) => setNewCourse({ ...newCourse, price: text })}
                 keyboardType="numeric"
-                style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 10 }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
               />
-            </ScrollView>
+            </View>
             <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
               <TouchableOpacity
                 onPress={() => setShowCreateCourse(false)}
@@ -288,17 +325,38 @@ export default function LearningScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={async () => {
+                  try {
+                    const res = await courseService.createCourses(newCourse);
+                    if (res.statusCode === 200 || res.statusCode === 201) {
+                      const createdCourse: MyCourse = {
+                        id: res.data?.generatedMaps[0].id,
+                        title: newCourse.title,
+                        thumbnail_image: newCourse.thumbnail_image,
+                        ratingCount: 5,
+                        teacherName: "Bao Nguyen"
+                      }
 
-                  await courseService.createCourses(newCourse)
-                  setShowCreateCourse(false);
-                  setNewCourse({
-                    title: "",
-                    description: "",
-                    state: "DRAFT",
-                    thumbnail_image: "",
-                    categoryId: "",
-                    price: "",
-                  });
+                      setTeacherCourses((prev) => ([
+                        ...prev,
+                        createdCourse
+                      ]))
+                      setShowCreateCourse(false);
+                      setNewCourse({
+                        title: "",
+                        description: "",
+                        state: "DRAFT",
+                        thumbnail_image: "",
+                        categoryId: "",
+                        price: "",
+                      });
+                    } else {
+                      console.error("Error creating course, status code: ", res.statusCode);
+                      Alert.alert("Error", "Failed to create course. Please try again.");
+                    }
+                  } catch (error) {
+                    console.error("Error creating course:", error);
+                    Alert.alert("Error", "Failed to create course. Please try again.");
+                  }
                 }}
                 style={{
                   paddingHorizontal: 16,

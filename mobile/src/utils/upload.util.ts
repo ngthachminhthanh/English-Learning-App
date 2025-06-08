@@ -4,7 +4,7 @@ import axios from 'axios';
 
 async function getPresignedUrl(extension: string, contentType: string) {
     const response = await axios.get(
-        `https://f484-2402-9d80-a50-28b-a80f-1e5-e3ce-b43c.ngrok-free.app/api/file/presigned-url?contentType=${contentType}&extension=${extension}`
+        `https://9d5c-2402-9d80-a50-28b-8c4-2fc5-3151-133c.ngrok-free.app/api/file/presigned-url?contentType=${contentType}&extension=${extension}`
     );
     return response.data.data; // { preSignedUrl, key }
 }

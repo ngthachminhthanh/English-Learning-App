@@ -133,6 +133,9 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
       type: newSection.type,
     });
     const sectionId = res?.data?.id; 
+    console.log("created section", res);
+    console.log("created section id", sectionId);
+    
     setLessons(prev =>
       prev.map(lesson =>
         lesson.id === sectionLessonId
@@ -228,6 +231,8 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
 
   const handleSectionPress = (section: any) => {
     setCurrentSectionId(section.id);
+    console.log("pressed section Id", section.id);
+    
     if (section.type === "video") {
       setCurrentVideoUri(section.uri);
       setIsPlaying(true);

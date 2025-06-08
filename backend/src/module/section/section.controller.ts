@@ -28,6 +28,7 @@ import { CreateQuestionDto } from '../question/dto/create-question.dto';
 import { Question } from '../question/entities/question.entity';
 import { Answer } from '../answer/entities/answer.entity';
 import { CreateAnswerDto } from '../answer/dto/create-answer.dto';
+import { log } from 'console';
 
 @ApiBearerAuth()
 @Controller(END_POINTS.SECTION.BASE)
@@ -127,11 +128,14 @@ export class SectionController {
     summary: 'Teacher creates a section with mock data format',
   })
   async teacherCreateSection(@Body() body: any) {
-    const section = await this.sectionService.createSectionFromMock(body);
-    return {
-      message: 'Section created successfully',
-      data: section,
-    };
+    const sections = await this.sectionService.createSectionFromMock(body);
+    const responses = await this.mapper.mapAsync(
+      sections,
+      Section, 
+      ResponseSectionDto,
+    );
+    console.log("section", responses)
+    return ResponseObject.create('Sections found', responses);
   }
 
   @Get(END_POINTS.SECTION.GET_ALL_SECTION_BY_LESSON)

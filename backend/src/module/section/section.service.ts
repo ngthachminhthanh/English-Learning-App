@@ -3,6 +3,7 @@ import { Section } from './entities/section.entity';
 import { DataSource } from 'typeorm';
 import HttpStatusCode from 'src/utils/HttpStatusCode';
 import { Lesson } from '../lesson/entities/lesson.entity';
+import { log } from 'console';
 
 @Injectable()
 export class SectionService {
@@ -39,16 +40,13 @@ export class SectionService {
 
       // Save section
       const savedSection = await this.dataSource.getRepository(Section).save(section);
-
+      console.log("savedSection",savedSection)
       // Return in mock format
       return {
         id: savedSection.id,
         title: savedSection.title,
         type: savedSection.type,
         content: savedSection.content,
-        sectionMedia: savedSection.sectionMedia,
-        sectionQuestionGroups: mockData.sectionQuestionGroups || [],
-        sectionQuestions: mockData.sectionQuestions || [],
       };
     } catch (error) {
       console.log(error);

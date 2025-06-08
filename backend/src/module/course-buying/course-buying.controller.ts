@@ -13,6 +13,7 @@ import { IUser } from 'src/common/guards/at.guard';
 import { VnpayIPNRequest } from './dto/vnpay-ipn.request.dto';
 import { createPayOrderUrlDto } from './dto/create-pay-order-url.dto';
 import { CheckKeyDto } from './dto/check-key.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiBearerAuth()
 @ApiTags(DOCUMENTATION.TAGS.COURSE_BUYING)
@@ -77,5 +78,28 @@ export class CourseBuyingController {
       user.userAwsId,
     );
     return ResponseObject.create('Check key successfully', result);
+  }
+
+  @Public()
+  @Get('payment-return')
+  @ApiOperation({ summary: 'Payment return from VNPay' })
+  async paymentReturn(@Query() query: any, @Res() res: Response) {
+    // Log tất cả parameters để debug
+    console.log('VNPay Return Parameters:', query);
+    // Trả về HTML với thông tin để copy
+    const html = `
+      <html>
+        <body>
+          <h2>VNPay Payment Result</h2>
+          <p><strong>Response Code:</strong> ${query.vnp_ResponseCode}</p>
+          <p><strong>Transaction Ref:</strong> ${query.vnp_TxnRef}</p>
+          <h3>Full Query String for Swagger:</h3>
+          <textarea style="width:100%; height:200px;">${JSON.stringify(query, null, 2)}</textarea>
+          <h3>URL Parameters:</h3>
+          <pre>${new URLSearchParams(query).toString()}</pre>
+        </body>
+      </html>
+    `;
+    res.send(html);
   }
 }
