@@ -12,11 +12,6 @@ import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import questionService from "../../services/question.service";
 
-const initialVocab: VocabItem[] = [
-  { id: 1, term: "home(n)", translation: "nhà", checked: false, showImage: true },
-  { id: 2, term: "nigga(n)", translation: "daden", checked: false },
-  { id: 3, term: "blue(a)", translation: "xanh", checked: true },
-];
 
 const Vocabulary = () => {
   const navigation = useNavigation<FlashCardNavigationProp>();

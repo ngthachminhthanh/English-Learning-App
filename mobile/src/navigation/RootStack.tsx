@@ -14,27 +14,27 @@ import ListeningExerciseScreen from "../screens/Listening/ListeningExercise";
 import SpeakingExercise from "../components/Speaking.tsx";
 import WritingExercise from "../screens/Writing/WritingExercise";
 import SectionRoot from "../screens/SectionRoot";
-import {
 
+import {
   AuthCongrats,
   ForgotPassword,
   Login,
   OTPVerification,
   ResetPassword,
   SignUp,
-
 } from "../screens/Auth";
+
 import SplashScreen from "../screens/Splash/SplashScreen";
 import CheckKey from "../screens/CourseDetail/CheckKey";
 import DetailGrammar from "../screens/Grammar/DetailGrammar";
 import Vocabulary from "../screens/Vocabulary";
 import Admin from "../screens/Admin/Admin";
-
+import FlashCard from "../screens/FlashCard/FlashCard"; 
 
 export default function RootStack() {
-
   const Stack = createStackNavigator();
   const scrollRef = useRef<ScrollView>(null);
+
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -73,25 +73,34 @@ export default function RootStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="BottomTabsNavigator"
+        component={BottomTabsNavigator}
         options={{
           headerShown: false,
         }}
-        name="BottomTabsNavigator"
-        component={BottomTabsNavigator}
       />
-
       <Stack.Screen name="CourseDetail" component={CourseDetail} />
-      <Stack.Screen name="Vocabulary" component={Vocabulary} options={
-        {
-          headerShown: false
-        }
-      }/>
-
-      <Stack.Screen name="Admin" component={Admin} options={
-        {
-          headerShown: false
-        }
-      }/>
+      <Stack.Screen
+        name="Vocabulary"
+        component={Vocabulary}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="FlashCard" // ✅ Thêm vào đúng dạng bạn yêu cầu
+        component={FlashCard}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Admin"
+        component={Admin}
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen name="CourseHome" component={CourseHome} />
       <Stack.Screen name="GrammarDetail" component={DetailGrammar} />
       <Stack.Screen
@@ -121,17 +130,14 @@ export default function RootStack() {
         }}
       />
       <Stack.Screen
-      name="SectionRoot"
-      component={SectionRoot}
-      options={{
-        headerShown: false,
-      }}
-    />
+        name="SectionRoot"
+        component={SectionRoot}
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen name="Speaking" component={SpeakingExercise} />
-      <Stack.Screen name='Writing' component={WritingExercise} />
-    
-    
+      <Stack.Screen name="Writing" component={WritingExercise} />
     </Stack.Navigator>
   );
-
 }
