@@ -24,6 +24,7 @@ import * as FileSystem from "expo-file-system";
 import { uploadFile } from "../../utils/upload.util";
 import { ScrollView } from "react-native-gesture-handler";
 
+
 const Profile = () => {
   const [profile, setProfile] = useState<User>({
     id: "",
@@ -54,7 +55,12 @@ const Profile = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const acessToken = await SecureStore.getItemAsync("accessToken")
+        console.log("acessToken on Profile",acessToken);
+        
         const result = await userService.getUser();
+        console.log("result", result);
+        
         if (result.statusCode === 200 && !isModified) {
           setProfile(result.data);
         }
@@ -192,6 +198,10 @@ const Profile = () => {
     try {
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("refreshToken");
+      await authService.signOut()
+      const acessTokenOnSignOut = SecureStore.getItemAsync("accessToken")
+      console.log("access token on sign out ", acessTokenOnSignOut);
+      
       navigation.navigate("Login");
     } catch (error) {
       console.error("Error logging out:", error);

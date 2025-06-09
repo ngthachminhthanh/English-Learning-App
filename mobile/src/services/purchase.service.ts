@@ -10,9 +10,10 @@ class PurchaseService {
     }
     async buyCourse(courseId: string) {
         return await http.post(
-            this.getURI('normal-buy'),
+            this.getURI(''),
             {
                 courseId: courseId,
+                "paymentMethod": "QR_CODE"
             },
         );
     }

@@ -9,6 +9,8 @@ import { User } from 'src/common/decorators/user.decorator';
 import { IUser } from 'src/common/guards/at.guard';
 import { ResponseObject } from 'src/utils/objects';
 import { CourseOwning } from './entities/course-owning.entity';
+import { CourseService } from '../course/course.service';
+import { log } from 'console';
 
 @ApiBearerAuth()
 @ApiTags(DOCUMENTATION.TAGS.COURSE_OWNING)
@@ -16,8 +18,9 @@ import { CourseOwning } from './entities/course-owning.entity';
 export class CourseOwningController {
   constructor(
     private readonly courseOwningService: CourseOwningService,
+    private readonly courseService: CourseService,
     @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  ) { }
   @Post(END_POINTS.COURSE_OWNING.ACTIVE_COURSE)
   @ApiOperation({
     summary: 'Create new course owning',
@@ -26,12 +29,22 @@ export class CourseOwningController {
     @Body() createCourseOwningDto: CreateCourseOwningDto,
     @User() user: IUser,
   ) {
+
     const courseOwning = this.mapper.map(
       createCourseOwningDto,
       CreateCourseOwningDto,
       CourseOwning,
     );
+
+    const course = await this.courseService.findOne(createCourseOwningDto.courseId);
+    if (!course) {  
+      console.log("error")
+    }
+
+    courseOwning.course = course;
+
     const newCourseOwning = await this.courseOwningService.active(
+      createCourseOwningDto.courseId,
       courseOwning,
       user.userAwsId,
     );

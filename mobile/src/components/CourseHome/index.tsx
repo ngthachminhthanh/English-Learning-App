@@ -22,6 +22,8 @@ import { scheduleStudyReminder } from '../../utils/notification.util';
 import { TextInput, Modal } from "react-native";
 import lessonService from "../../services/lesson.service";
 import sectionService from "../../services/section.service";
+import { jwtDecode } from "jwt-decode";
+import * as SecureStore from "expo-secure-store";
 const { height } = Dimensions.get("window");
 
 // --- Mock Data ---
@@ -77,6 +79,7 @@ export default function CourseViewer() {
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
   const navigation = useNavigation<CourseDetailScreenNavigationProp>();
+  const [isTeacher, setIsTeacher] = useState<boolean>()
   const route = useRoute<CourseScreenRouteProp>();
   const { course } = route.params || {};
   // const course = {
@@ -108,11 +111,11 @@ export default function CourseViewer() {
 
   // Replace with your API call
   const handleCreateLesson = async () => {
-const res = await lessonService.createLesson({ ...newLesson, courseId: course.id });
-  // Use the real UUID from the API response
-  const lessonId = res?.data?.id || `lesson${lessons.length + 1}`; 
-  setSectionLessonId(lessonId)   
-  setLessons(prev => [
+    const res = await lessonService.createLesson({ ...newLesson, courseId: course.id });
+    // Use the real UUID from the API response
+    const lessonId = res?.data?.id || `lesson${lessons.length + 1}`;
+    setSectionLessonId(lessonId)
+    setLessons(prev => [
       ...prev,
       {
         id: lessonId,
@@ -125,6 +128,28 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
     setNewLesson({ name: "", description: "", content: "" });
   };
 
+  useEffect(() => {
+    interface DecodedToken {
+      [key: string]: any;
+      "cognito:groups"?: string[];
+      "username": string
+    }
+
+    const decodeTokenAndFetch = async () => {
+      // 1. Decode token and set isTeacher
+      const token = await SecureStore.getItemAsync("accessToken");
+      const decoded = jwtDecode<DecodedToken>(token || "");
+      const groups = decoded["cognito:groups"];
+
+      setIsTeacher(groups?.includes("TEACHER"));
+      console.log(decoded);
+      console.log(groups?.includes("TEACHER"));
+
+    };
+
+    decodeTokenAndFetch();
+  }, []);
+
   const handleCreateSection = async () => {
     if (!sectionLessonId) return;
     const res = await sectionService.createSection({
@@ -132,10 +157,10 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
       title: newSection.title,
       type: newSection.type,
     });
-    const sectionId = res?.data?.id; 
+    const sectionId = res?.data?.id;
     console.log("created section", res);
     console.log("created section id", sectionId);
-    
+
     setLessons(prev =>
       prev.map(lesson =>
         lesson.id === sectionLessonId
@@ -175,7 +200,7 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
           res.data.map(async (lesson: Lesson) => {
             const sections = await fetchSection(lesson.id);
             console.log("section", sections);
-            
+
             return { ...lesson, sections: sections ?? [] };
           })
         );
@@ -232,7 +257,7 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
   const handleSectionPress = (section: any) => {
     setCurrentSectionId(section.id);
     console.log("pressed section Id", section.id);
-    
+
     if (section.type === "video") {
       setCurrentVideoUri(section.uri);
       setIsPlaying(true);
@@ -283,19 +308,24 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
   return (
     <View style={styles.container}>
       {/* Add Lesson Button */}
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#5D5FEF",
-          borderRadius: 20,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          alignSelf: "flex-end",
-          margin: 16,
-        }}
-        onPress={() => setShowCreateLesson(true)}
-      >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Lesson</Text>
-      </TouchableOpacity>
+      {isTeacher && (
+        <>
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#5D5FEF",
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              alignSelf: "flex-end",
+              margin: 16,
+            }}
+            onPress={() => setShowCreateLesson(true)}
+          >
+            <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Lesson</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
 
       {/* Create Lesson Modal */}
       <Modal visible={showCreateLesson} transparent animationType="fade">
@@ -369,23 +399,29 @@ const res = await lessonService.createLesson({ ...newLesson, courseId: course.id
                 <HTML source={{ html: lesson.content }} />
               </Text>
               {/* Add Section Button */}
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#EF5DA8",
-                  borderRadius: 16,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  alignSelf: "flex-end",
-                  marginBottom: 8,
-                  marginRight: 16,
-                }}
-                onPress={() => {
-                  setSectionLessonId(lesson.id);
-                  setShowCreateSection(true);
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Section</Text>
-              </TouchableOpacity>
+
+              {isTeacher && (
+                <>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: "#EF5DA8",
+                      borderRadius: 16,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      alignSelf: "flex-end",
+                      marginBottom: 8,
+                      marginRight: 16,
+                    }}
+                    onPress={() => {
+                      setSectionLessonId(lesson.id);
+                      setShowCreateSection(true);
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Add Section</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
               <View style={styles.sectionListContainer}>
                 <View style={styles.row}>
                   {lesson.sections

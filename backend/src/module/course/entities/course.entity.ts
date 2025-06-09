@@ -41,7 +41,7 @@ export class Course extends Base {
     default: STATE.DRAFT,
   })
   @AutoMap()
-  state: STATE = STATE.DRAFT;
+  state: STATE;
 
   @ManyToOne(() => CourseCategory, (category) => category.course)
   @JoinColumn({ name: 'categoryId' })

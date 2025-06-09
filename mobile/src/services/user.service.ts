@@ -26,6 +26,8 @@ class UserService {
       throw new Error(`HTTP error! status: ${error.message}`);
     }
   }
+
+
   async getImageUrl(contentType: string, extension: string) {
     try {
       const response = await http.get("file/presigned-url?contentType=" + contentType + "&extension=" + extension);

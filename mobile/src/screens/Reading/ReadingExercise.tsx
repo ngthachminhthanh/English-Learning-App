@@ -176,7 +176,7 @@ export default function ReadingExercise({ scrollRef }: ReadingExerciseProps) {
       "paragraph": newQuestion,
       "sectionId": sectionID
     })
-    setNewQuestion(res.data);
+    setNewQuestion(res.data?.paragraph);
     setShowAddModal(false);
   };
 

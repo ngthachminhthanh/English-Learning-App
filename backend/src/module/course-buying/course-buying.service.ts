@@ -33,6 +33,7 @@ import {
       awsCognitoId: string,
     ) {
       try {
+        console.log("awsCognitoId",awsCognitoId)
         const user = await this.dataSource.getRepository(User).findOneOrFail({
           where: { awsCognitoId: awsCognitoId },
         });

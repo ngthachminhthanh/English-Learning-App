@@ -36,6 +36,8 @@ export class CourseBuyingController {
       CreateCourseBuyingDto,
       CourseBuying,
     );
+
+    console.log("user.userAwsId",user.userAwsId)
     const result = await this.courseBuyingService.create(
       courseBuying,
       createCourseBuyingDto.courseId,
@@ -86,6 +88,7 @@ export class CourseBuyingController {
   async paymentReturn(@Query() query: any, @Res() res: Response) {
     // Log tất cả parameters để debug
     console.log('VNPay Return Parameters:', query);
+
     // Trả về HTML với thông tin để copy
     const html = `
       <html>

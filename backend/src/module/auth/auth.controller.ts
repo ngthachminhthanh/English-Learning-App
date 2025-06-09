@@ -140,11 +140,12 @@ import { log } from 'console';
       return ResponseObject.create('User signed in', { userInfo, accessToken });
     }
   
-    @Public()
+
     @Post(END_POINTS.AUTH.SIGN_OUT)
     @ApiOperation({ summary: 'Sign out a user' })
     async signOut(@UserReq() user: IUser, @Res() response: Response) {
-      this.authService.removeRefreshToken(response);
+      console.log("user", user)
+      // this.authService.removeRefreshToken(response);
       await this.cognitoService.signOut(user.userName);
       return ResponseObject.create('User signed out');
     }

@@ -36,9 +36,13 @@ const Login = () => {
       console.log("Sign in response:", res);
       
       if (res.statusCode === 201) {
+        console.log("res.data",res.data);
+        console.log("res", res);
+        
         // res.data: { accessToken: string, refreshToken: string }
         await SecureStore.setItemAsync("accessToken", res.data.accessToken);
-
+        const accessWhenLogin = await SecureStore.getItemAsync("accessToken")
+        console.log("access token:", accessWhenLogin);
         // await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);
 
         navigation.navigate("BottomTabsNavigator");

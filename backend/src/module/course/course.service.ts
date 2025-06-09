@@ -30,7 +30,7 @@ export class CourseService {
         .leftJoin('course.teacher', 'teacher')
         .leftJoin('teacher.userInfo', 'userInfo')
         .leftJoin('course.courseReviewings', 'courseReviewings')
-        .select(['course', 'category.name', 'teacher', 'userInfo'])
+        .select(['course', 'category.name', 'teacher', 'userInfo', 'course.price'])
         .where('course.state = :state', { state: STATE.PUBLISHED });
 
       if (query.search) {

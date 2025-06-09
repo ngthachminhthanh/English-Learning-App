@@ -11,6 +11,8 @@ import MainHeader from "../../components/MainHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 // Example usage:
 
@@ -20,6 +22,8 @@ const Home = () => {
   const [userName, setUserName] = useState("")
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  const insets = useSafeAreaInsets();
 
   interface CourseCategory {
     id: string;
@@ -70,7 +74,7 @@ const Home = () => {
 
       // 3. Fetch recommendation courses
       try {
-        const res = await courseService.getAllCourses(); // change to getRecommendationCourses later
+        const res = await courseService.getAllCourses(); 
         if (res.statusCode === 200) {
           setRecommendationCourses(res.data.data);
         } else {
@@ -93,7 +97,7 @@ const Home = () => {
     <SafeAreaView>
       <MainHeader showSearchButton={true} />
       <ScrollView
-        style={{
+        contentContainerStyle={{
           padding: 10,
         }}
         className="flex flex-col gap-4 pb-20"
@@ -116,9 +120,7 @@ const Home = () => {
             gap: 10,
           }}
         >
-          <DirectToSectionCard />
-          <DirectToSectionCard />
-          <DirectToSectionCard />
+
         </ScrollView>
         <View className="categories flex flex-col gap-2">
           <View className="heading flex flex-row justify-between items-center">
@@ -228,11 +230,14 @@ const Home = () => {
             </View>
           )}
         </View>
+        {!isTeacher && (
+          <>
+
+          </>
+        )}
         <View className="recommend flex flex-col gap-2">
           <View className="heading flex flex-row items-center">
-            <Text className="text-lg font-bold text-blue1">
-              Recommend for you
-            </Text>
+            <Text className="text-lg font-bold text-blue1">Recommend for you</Text>
           </View>
           <View
             className="courses-container"
@@ -243,8 +248,7 @@ const Home = () => {
               marginBottom: 20,
             }}
           >
-            {Array.isArray(recommendationCourses) &&
-              recommendationCourses.length > 0 ? (
+            {Array.isArray(recommendationCourses) && recommendationCourses.length > 0 ? (
               recommendationCourses.map((course) => (
                 <CourseCard course={course} key={course.id} />
               ))
@@ -253,6 +257,8 @@ const Home = () => {
             )}
           </View>
         </View>
+
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -8,7 +8,7 @@ import { SectionProgress } from './section-progress.entity';
 
 @Entity()
 export class CourseOwning extends Base {
-  @Column()
+  @Column({nullable: true})
   @AutoMap()
   expiredDate: Date;
   @Column()

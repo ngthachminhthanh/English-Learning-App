@@ -30,6 +30,7 @@ import { catchError } from 'rxjs/operators';
 import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResendConfirmationCodeDto } from './dto/resend-confirmation-code.dto';
+import { log } from 'console';
 
 @Injectable()
 export class CognitoService {
@@ -315,6 +316,8 @@ export class CognitoService {
   }
 
   async signOut(username: string) {
+    console.log("this.userPoolId",this.userPoolId)
+    console.log("username",username)
     const command = new AdminUserGlobalSignOutCommand({
       UserPoolId: this.userPoolId,
       Username: username,

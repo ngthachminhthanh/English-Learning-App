@@ -1,10 +1,11 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Button } from "@rneui/themed";
 import React, { useState } from "react";
-import { Alert, Image, Modal, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Image, Modal, StyleSheet, Text, TextInput, View, Linking } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import Spinner from 'react-native-loading-spinner-overlay';
 import purchaseservice from "../../services/purchase.service";
+import courseOwning from "../../services/courseOwning.service";
 import { CheckKeyScreenNavigationProp, PayMentScreenRouteProp } from "../../type";
 export default function PayWithBank() {
   const route = useRoute<PayMentScreenRouteProp>();
@@ -15,12 +16,39 @@ export default function PayWithBank() {
       setLoading(true);
       const res = await purchaseservice.buyCourse(courseID);
       console.log(res);
+
       if (res) {
         if (res.statusCode === 201) {
           Alert.alert("Success", "Purchase successful. Please register key that was sent to your email");
-          setTimeout(() => {
-            nav.navigate("Validation", { courseBuyingId: res.data.courseBuying });
-          }, 1000);
+          const courseBuyingId = res.data?.identifiers[0].id
+
+          try {
+            setLoading(true);
+            const res = await purchaseservice.getRedirectionUrl(courseBuyingId);
+            console.log(res);
+
+            if (res) {
+              if (res.statusCode === 201) {
+                await courseOwning.activeCourse(courseID)
+                Alert.alert("Success", "Purchase successful");
+                const redirectUrl = res.data?.result
+                const supported = await Linking.canOpenURL(redirectUrl);
+                if (supported) {
+                  await Linking.openURL(redirectUrl);
+                  // Note: You can't directly detect payment completion here
+                  // Rely on deep linking to handle the return
+                } else {
+                  Alert.alert("Error", "Cannot open payment URL");
+                }
+
+              } else if (res.statusCode === 500) {
+                Alert.alert("Failed", "Course is already owned by user");
+              }
+            }
+            setLoading(false);
+          } catch (error) {
+            Alert.alert("Failed", String(error));
+          }
         } else if (res.statusCode === 500) {
           Alert.alert("Failed", "Course is already owned by user");
         }
@@ -62,7 +90,7 @@ export default function PayWithBank() {
               data={[
                 { label: "Vietcombank" },
                 { label: "Techcombank" },
-                { label: "Vietinbank" },
+                { label: "NCB" },
               ]}
               labelField={"label"}
               valueField={"label"}

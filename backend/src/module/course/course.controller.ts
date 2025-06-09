@@ -12,7 +12,7 @@ import {
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { DOCUMENTATION, END_POINTS } from 'src/utils/constants';
+import { DOCUMENTATION, END_POINTS, STATE } from 'src/utils/constants';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { Course } from './entities/course.entity';
@@ -41,7 +41,7 @@ export class CourseController {
     private readonly courseService: CourseService,
     private readonly courseCategoryService: CourseCategoryService,
     @InjectMapper() private readonly mapper: Mapper,
-  ) {}
+  ) { }
 
   @Post(END_POINTS.COURSE.CREATE)
   @ApiOperation({ summary: 'Create course' })
@@ -56,6 +56,7 @@ export class CourseController {
     const course = this.mapper.map(createCourseDto, CreateCourseDto, Course);
     course.category = category;
     course.teacher = teacher;
+    course.state = STATE.PUBLISHED
     const result = await this.courseService.create(user.userAwsId, course);
     return ResponseObject.create('Course created', result);
   }

@@ -7,5 +7,6 @@ import { CourseCategoryService } from '../course-category/course-category.servic
 @Module({
   controllers: [CourseController],
   providers: [CourseService, CourseProfile, CourseCategoryService],
+  exports: [CourseService]
 })
 export class CourseModule {}

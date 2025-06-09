@@ -76,6 +76,7 @@ export default function LearningScreen() {
 
 
       try {
+
         const result = await courseService.getTeacherCourses();
         console.log("result", result);
 
@@ -145,7 +146,7 @@ export default function LearningScreen() {
             onPress={() => setButtonSelected("All")}
           ></Button>
 
-          {
+          {/* {
             !isTeacher && (
               <>
                 <Button
@@ -192,7 +193,7 @@ export default function LearningScreen() {
 
               </>
             )
-          }
+          } */}
 
           {
             isTeacher && (

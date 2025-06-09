@@ -73,6 +73,7 @@ class Http {
       method,
       headers: {
         "Content-Type": "application/json",
+        'Cache-Control': 'no-store',
         ...headers,
       },
       body: data ? JSON.stringify(data) : undefined,

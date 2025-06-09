@@ -42,6 +42,14 @@ export class CourseResponseDto {
     example: 100,
     description: 'Number of ratings',
   })
+
+  @AutoMap()
+  price: number;
+  @ApiProperty({
+    example: 100,
+    description: 'price of course',
+  })
+  
   @AutoMap()
   ratingCount: number;
   @ApiProperty({
