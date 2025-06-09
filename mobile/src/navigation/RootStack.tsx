@@ -88,7 +88,7 @@ export default function RootStack() {
         }}
       />
       <Stack.Screen
-        name="FlashCard" // ✅ Thêm vào đúng dạng bạn yêu cầu
+        name="FlashCard" 
         component={FlashCard}
         options={{
           headerShown: false,
