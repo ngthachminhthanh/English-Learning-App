@@ -18,6 +18,7 @@ import {
 } from "../../type";
 import authService from "../../services/auth.service";
 import * as SecureStore from "expo-secure-store";
+import http from "../../services/Http";
 
 const validationSchema = Yup.object().shape({
   username: Yup.string().required("Username is required"),
@@ -41,6 +42,7 @@ const Login = () => {
         
         // res.data: { accessToken: string, refreshToken: string }
         await SecureStore.setItemAsync("accessToken", res.data.accessToken);
+        http.setAccessToken(res.data.accessToken)
         const accessWhenLogin = await SecureStore.getItemAsync("accessToken")
         console.log("access token:", accessWhenLogin);
         // await SecureStore.setItemAsync("refreshToken", res.data.refreshToken);

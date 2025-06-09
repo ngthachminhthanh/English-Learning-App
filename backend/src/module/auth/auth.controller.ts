@@ -26,6 +26,7 @@ import {
   import { ApiOperation, ApiTags } from '@nestjs/swagger';
   import { ForgotPasswordDto } from './dto/forgot-password.dto';
   import { ConfirmForgotPasswordDto } from './dto/confirm-forgot-password.dto';
+  import * as jwt from 'jsonwebtoken';
 import { log } from 'console';
   
   @ApiTags(DOCUMENTATION.TAGS.AUTH)
@@ -143,9 +144,26 @@ import { log } from 'console';
 
     @Post(END_POINTS.AUTH.SIGN_OUT)
     @ApiOperation({ summary: 'Sign out a user' })
-    async signOut(@UserReq() user: IUser, @Res() response: Response) {
+    async signOut(@UserReq() user: IUser, @Req() request: Request, @Res() response: Response) {
+      console.log('Raw Authorization header:', request.headers.authorization);
+    console.log('User from JwtStrategy:', user);
+
+    const authHeader = request.headers.authorization;
+    console.log('Raw Authorization header:', authHeader);
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.decode(token, { complete: true });
+        console.log('Decoded JWT payload:', JSON.stringify(decoded, null, 2));
+      } catch (error) {
+        console.error('Error decoding JWT:', error.message || error);
+      }
+    } else {
+      console.error('No valid Authorization header found');
+    }
       console.log("user", user)
-      // this.authService.removeRefreshToken(response);
+      this.authService.removeRefreshToken(response);
       await this.cognitoService.signOut(user.userName);
       return ResponseObject.create('User signed out');
     }

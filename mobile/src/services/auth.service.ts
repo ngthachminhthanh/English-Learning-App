@@ -13,7 +13,7 @@ class AuthService {
     
     return await http.post(this.getURI("sign-up"), data);
   }
-  async signIn(data: any) {
+  async signIn(data: any) {  
     return await http.post(this.getURI("sign-in"), data);
   }
   async confirmSignUp(data: any) {
