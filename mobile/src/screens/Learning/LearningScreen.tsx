@@ -14,7 +14,10 @@ import { FlatList } from "react-native-gesture-handler";
 import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 import courseCategoryService from "../../services/courseCategory.service";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import DropDownPicker from 'react-native-dropdown-picker';
+import { uploadFile } from "../../utils/upload.util";
 
 export default function LearningScreen() {
   const [open, setOpen] = useState(false);
@@ -26,6 +29,10 @@ export default function LearningScreen() {
   const [teacherCourses, setTeacherCourses] = useState<MyCourse[]>([]);
   const [isTeacher, setIsTeacher] = useState<boolean>()
   const [showCreateCourse, setShowCreateCourse] = useState(false);
+  const [isImageValid, setIsImageValid] = useState<boolean | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState("");
   interface CourseCategory {
     id: string;
     name: string;
@@ -33,6 +40,93 @@ export default function LearningScreen() {
   const [courseCategories, setCourseCategories] = useState<CourseCategory[]>(
     []
   );
+
+  const pickFile = async () => {
+    try {
+      setErrorMessage("");
+      setIsImageValid(null);
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setSelectedFileUrl(asset.uri);
+        console.log("uri:", asset.uri);
+
+        // Get file info
+        const fileInfo = await FileSystem.getInfoAsync(asset.uri);
+        console.log("File info:", fileInfo);
+        if (!fileInfo.exists || fileInfo.size === 0) {
+          throw new Error("File does not exist or is empty");
+        }
+        if (fileInfo.size < 1000) {
+          throw new Error(`File size too small (${fileInfo.size} bytes), likely corrupted`);
+        }
+
+        // Validate MIME type
+        const extension = asset.name?.split(".").pop()?.toLowerCase() || "";
+        const contentTypeMap = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+        };
+        const mimeType =
+          (extension in contentTypeMap
+            ? contentTypeMap[extension as keyof typeof contentTypeMap]
+            : undefined) ||
+          asset.mimeType ||
+          "application/octet-stream";
+        if (!mimeType.startsWith("image/")) {
+          throw new Error(`Invalid MIME type: ${mimeType}`);
+        }
+
+        // Optional JPEG header validation
+        if (mimeType === "image/jpeg") {
+          try {
+            const fileContent = await FileSystem.readAsStringAsync(asset.uri, {
+              encoding: FileSystem.EncodingType.Base64,
+              length: 2,
+            });
+            const binaryString = atob(fileContent);
+            const bytes = new Uint8Array(binaryString.split("").map((c) => c.charCodeAt(0)));
+            if (bytes[0] !== 0xFF || bytes[1] !== 0xD8) {
+              throw new Error("Invalid JPEG file: Missing SOI marker");
+            }
+            console.log("JPEG header validated successfully");
+          } catch (validationError) {
+            console.warn("JPEG validation failed, proceeding anyway:", validationError);
+          }
+        }
+
+        // Upload file to S3
+        const key = await uploadFile(asset.uri, asset.name || "image.jpg", mimeType, "profile image file");
+        const cloudfrontUrl = `https://d1fc7d6en42vzg.cloudfront.net/${key}`;
+        console.log("S3 key:", key);
+
+        // Update user profile
+
+
+
+        setFileUrl(cloudfrontUrl);
+        setNewCourse({ ...newCourse, thumbnail_image: cloudfrontUrl });
+
+        setIsImageValid(true);
+
+        Alert.alert("Success", "Image uploaded successfully");
+      } else {
+        Alert.alert("No file selected", "Please select a file to upload.");
+      }
+    } catch (err) {
+      console.error("File pick or upload error:", err);
+      setIsImageValid(false);
+      setErrorMessage("File is corrupted or invalid, please select another");
+      Alert.alert("Error", "Failed to upload file. Please try again.");
+    }
+  };
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
@@ -263,10 +357,18 @@ export default function LearningScreen() {
                   marginBottom: 10,
                 }}
               />
+              <TouchableOpacity onPress={pickFile}>
+                <Text style={{ color: "#5D5FEF", fontWeight: "bold", marginBottom: 20 }}>
+                  Add Thumbnail
+                </Text>
+              </TouchableOpacity>
+              {errorMessage ? (
+                <Text style={{ color: "red", marginBottom: 10 }}>{errorMessage}</Text>
+              ) : null}
               <TextInput
                 placeholder="Thumbnail Image URL"
-                value={newCourse.thumbnail_image}
-                onChangeText={(text) => setNewCourse({ ...newCourse, thumbnail_image: text })}
+                value={fileUrl}
+                //onChangeText={(text) => setNewCourse({ ...newCourse, thumbnail_image: text })}
                 style={{
                   borderWidth: 1,
                   borderColor: "#ccc",
@@ -332,7 +434,7 @@ export default function LearningScreen() {
                       const createdCourse: MyCourse = {
                         id: res.data?.generatedMaps[0].id,
                         title: newCourse.title,
-                        thumbnail_image: newCourse.thumbnail_image,
+                        thumbnail_image: fileUrl,
                         ratingCount: 5,
                         teacherName: "Bao Nguyen"
                       }

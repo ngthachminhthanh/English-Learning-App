@@ -75,6 +75,8 @@ const Home = () => {
       // 3. Fetch recommendation courses
       try {
         const res = await courseService.getAllCourses(); 
+        console.log("recommend course", res.data.data);
+        
         if (res.statusCode === 200) {
           setRecommendationCourses(res.data.data);
         } else {

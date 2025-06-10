@@ -62,7 +62,7 @@ export class CourseProfile extends AutomapperProfile {
         ),
         forMember(
           (dest) => dest.thumbnail_image,
-          mapFrom((src) => `${this.cloudFrontUrl}/${src.thumbnail_image}`),
+          mapFrom((src) => `${src.thumbnail_image}`),
         ),
         forMember(
           (dest) => dest.price,
