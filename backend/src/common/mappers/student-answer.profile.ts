@@ -9,6 +9,7 @@ export class StudentAnswerProfile extends AutomapperProfile {
   constructor(@InjectMapper() mapper: Mapper) {
     super(mapper);
   }
+
   override get profile() {
     return (mapper: Mapper) => {
       createMap(
@@ -16,9 +17,21 @@ export class StudentAnswerProfile extends AutomapperProfile {
         CreateStudentAnswerDto,
         StudentAnswer,
         forMember(
-          (destination) => destination.question,
-          mapFrom((source) => ({ id: source.questionId })),
+          (dest) => dest.question,
+          mapFrom((src) => ({ id: src.questionId })),
         ),
+        forMember(
+          (dest) => dest.type,
+          mapFrom((src) => src.type),
+        ),
+        forMember(
+          (dest) => dest.answer,
+          mapFrom((src) => src.answer),
+        ),
+        forMember(
+          (dest) => dest.fileUrl,
+          mapFrom((src) => src.fileUrl),
+        )
       );
     };
   }

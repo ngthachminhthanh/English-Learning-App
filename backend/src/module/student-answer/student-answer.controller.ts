@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Patch, Param, Body } from '@nestjs/common';
 import { StudentAnswerService } from './student-answer.service';
 import { DOCUMENTATION, END_POINTS } from 'src/utils/constants';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -10,6 +10,7 @@ import { Mapper } from '@automapper/core';
 import { CreateStudentAnswerDto } from './dto/create-student-answer.dto';
 import { StudentAnswer } from './entities/student-answer.entity';
 import { CreateSubmitAnswerDto } from './dto/create-submit-answer.dto';
+import { GradeManualAnswerDto } from './dto/grade-manual-answer.dto';
 
 @ApiBearerAuth()
 @ApiTags(DOCUMENTATION.TAGS.STUDENT_ANSWER)
@@ -36,5 +37,15 @@ export class StudentAnswerController {
       user.userAwsId,
     );
     return ResponseObject.create('Successfully', result);
+  }
+
+  @ApiOperation({ summary: 'Grade manual answer (writing/speaking)' })
+  @Patch(':id/grade')
+  async gradeManualAnswer(
+    @Param('id') answerId: string,
+    @Body() dto: GradeManualAnswerDto,
+  ) {
+    const result = await this.studentAnswerService.gradeManualAnswer(answerId, dto);
+    return ResponseObject.create('Graded successfully', result);
   }
 }
